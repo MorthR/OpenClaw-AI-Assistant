@@ -22,6 +22,6 @@ OpenClaw-Assistant/
 │   ├── base.py           # Abstract Base Skill class
 │   ├── registry.py       # Centralized skill registry
 │   ├── qq_email.py       # Email skill implementation
-│   └── calendar_tool.py  # SQLite-backed calendar skill implementation
+│   └── calendar.py       # SQLite-backed calendar skill implementation
 ├── main.py               # FastAPI entry point
 └── requirements.txt      # Project dependencies
