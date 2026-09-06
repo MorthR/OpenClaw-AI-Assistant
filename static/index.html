@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>OpenClaw AI Personal Assistant</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <h2>OpenClaw Local AI Assistant</h2>
+    <div id="chat-box"></div>
+    <div class="input-area">
+        <input type="text" id="userInput" placeholder="Send a message or enter a command" onkeydown="if(event.key==='Enter') send()">
+        <button onclick="send()">Send</button>
+    </div>
+
+    <script>
+        const chatBox = document.getElementById('chat-box');
+
+        // Auto-load history when the page is loaded
+        async function loadHistory() {
+            const res = await fetch('/api/history');
+            const data = await res.json();
+            data.history.forEach(item => appendMessage(item.role, item.content));
+        }
+
+        function appendMessage(role, text) {
+            //Ceate a wrapper for the message
+            const wrapper = document.createElement('div');
+            wrapper.className = `msg-wrapper ${role}`;
+
+            //Create a div for the sender's name
+            const nameDiv = document.createElement('div');
+            nameDiv.className = 'sender-name';
+            nameDiv.innerText = role === 'user' ? 'Me' : 'OpenClaw AI';
+
+            //Create a div for the message content
+            const msgDiv = document.createElement('div');
+            msgDiv.className = 'msg';
+            msgDiv.innerText = text;
+
+            //Combine the name and message into the wrapper
+            wrapper.appendChild(nameDiv);
+            wrapper.appendChild(msgDiv);
+            
+            chatBox.appendChild(wrapper);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        async function send() {
+            const input = document.getElementById('userInput');
+            const text = input.value.trim();
+            if (!text) return;
+
+            appendMessage('user', text);
+            input.value = '';
+
+            const res = await fetch('/api/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: text })
+            });
+            const data = await res.json();
+
+            let botMsg = '';
+            if (data.type === 'skill_executed') {
+                botMsg = `[Skill Executed] Skill Executed: ${data.skill}\n` + JSON.stringify(data.data, null, 2);
+            } else {
+                botMsg = data.text;
+            }
+            appendMessage('assistant', botMsg);
+        }
+
+        loadHistory();
+    </script>
+</body>
+</html>
