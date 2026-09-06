@@ -1,52 +1,43 @@
+import os
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
-import os
 
 from skills.registry import SkillRegistry
-from skills.mock_email import MockEmailSkill
+from skills.qq_email import EmailSkill
+from skills.calendar import CalendarSkill
+
 from agent.core import AgentCore
 from agent.memory import MemoryManager
-
-from fastapi.staticfiles import StaticFiles
-from skills.qq_email import EmailSkill
 
 QQ_USER = "519656964@qq.com"
 QQ_PASS = "xavrsazgrpuvcbaf"
 
+memory = MemoryManager()
+registry = SkillRegistry()
+
+registry.register(EmailSkill(username=QQ_USER, password=QQ_PASS))
+registry.register(CalendarSkill())
+
+agent = AgentCore(registry=registry, memory=memory)
+
+#Initialize FastAPI app and mount static files
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
-
-#Initializing Components
-registry = SkillRegistry()
-registry.register(EmailSkill(username=QQ_USER, password=QQ_PASS))
-agent = AgentCore(registry=registry)
-memory = MemoryManager()
 
 class ChatRequest(BaseModel):
     message: str
 
 @app.post("/api/chat")
 def chat(req: ChatRequest):
-    #1. Record user message
-    memory.add_message("user", req.message)
-
-    #2. Agent processing
+    #Save the conversation to memory
     response_data = agent.process(req.message)
-
-    #3. Record assistant message
-    if response_data.get("type") == "skill_executed":
-        bot_msg = f"Executed skill 【{response_data['skill']}】, Result: {response_data['data']}"
-    else:
-        bot_msg = response_data.get("text", "")
-
-    memory.add_message("assistant", bot_msg)
     return response_data
 
 @app.get("/api/history")
 def get_history():
-    """Get the local chat history"""
+    """Load local chat history"""
     return {"history": memory.get_recent_history(limit=20)}
 
 @app.get("/", response_class=HTMLResponse)

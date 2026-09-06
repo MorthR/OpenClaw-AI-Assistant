@@ -7,59 +7,82 @@ from email.mime.multipart import MIMEMultipart
 from .base import BaseSkill
 
 class EmailSkill(BaseSkill):
-    name = "email_tool"
-    description = "Personal email operation: search inbox emails by keyword or send new emails to specified addresses"
-
-    def __init__(self, username: str, password: str):
+    def __init__(self, username: str, password: str, imap_server: str = "imap.qq.com"):
         self.username = username
         self.password = password
-        self.imap_server = "imap.qq.com"
-        self.smtp_server = "smtp.qq.com"
+        self.imap_server = imap_server
 
+    @property
+    def name(self) -> str:
+        return "email_tool"
+
+    @property
+    def description(self) -> str:
+        return "Tool for reading, searching, or sending emails"
+
+    @property
     def schema(self) -> dict:
         return {
-            "type": "object",
-            "properties": {
-                "action": {
-                    "type": "string", 
-                    "description": "Must be 'search' (search emails) or 'send' (send email)"
+            "name": "email_tool",
+            "description": "Tool for reading, searching, or sending emails",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "action": {
+                        "type": "string",
+                        "description": "Operation type: 'search' for searching/reading emails, 'send' for sending emails",
+                        "enum": ["search", "send"]
+                    },
+                    "keyword": {
+                        "type": "string",
+                        "description": "Query email search keyword, e.g., 'express delivery', 'FYP', sender's name, etc."
+                    },
+                    "to_email": {
+                        "type": "string",
+                        "description": "Recipient email address when sending email"
+                    },
+                    "subject": {
+                        "type": "string",
+                        "description": "Send email subject"
+                    },
+                    "body": {
+                        "type": "string",
+                        "description": "Send email body content"
+                    }
                 },
-                "keyword": {
-                    "type": "string", 
-                    "description": "Keyword for searching emails (if action is 'search')"
-                },
-                "to_email": {
-                    "type": "string", 
-                    "description": "Recipient email address (if action is 'send')"
-                },
-                "subject": {
-                    "type": "string", 
-                    "description": "Email subject (if action is 'send')"
-                },
-                "body": {
-                    "type": "string", 
-                    "description": "Email body (if action is 'send')"
-                }
-            },
-            "required": ["action"]
+                "required": ["action"]
+            }
         }
+
+    def run(self, params: dict) -> dict:
+        action = params.get("action", "search")
+        if action == "search":
+            keyword = params.get("keyword", "")
+            emails = self._search_emails(keyword)
+            return {"status": "success", "count": len(emails), "emails": emails}
+        elif action == "send":
+            to_email = params.get("to_email")
+            subject = params.get("subject", "No Subject")
+            body = params.get("body", "")
+            res = self._send_email(to_email, subject, body)
+            return res
+        else:
+            return {"status": "error", "message": f"Unknown action type: {action}"}
 
     def _search_emails(self, keyword: str = "") -> list:
         results = []
         try:
-            # Connect to QQ Email IMAP SSL port 993
             mail = imaplib.IMAP4_SSL(self.imap_server, 993)
             mail.login(self.username, self.password)
             mail.select("INBOX")
 
-            search_criterion = f'BODY "{keyword}"' if keyword else 'ALL'
-            status, messages = mail.search(None, search_criterion)
+            status, messages = mail.search(None, 'ALL')
             
             if status != "OK" or not messages[0]:
                 return []
 
             email_ids = messages[0].split()
-            recent_ids = email_ids[-5:]
+            recent_ids = email_ids[-15:]
 
             for e_id in reversed(recent_ids):
                 _, msg_data = mail.fetch(e_id, "(RFC822)")
@@ -67,7 +90,7 @@ class EmailSkill(BaseSkill):
                     if isinstance(response_part, tuple):
                         msg = email.message_from_bytes(response_part[1])
                         
-                        # Parse and decode the subject
+                        # Parse subject
                         subject = ""
                         raw_subject = msg.get("Subject", "")
                         if raw_subject:
@@ -78,7 +101,7 @@ class EmailSkill(BaseSkill):
                                 else:
                                     subject += part
 
-                        # Parse and decode the sender
+                        # Parse sender
                         sender = ""
                         raw_sender = msg.get("From", "")
                         if raw_sender:
@@ -89,50 +112,38 @@ class EmailSkill(BaseSkill):
                                 else:
                                     sender += part
 
+                        # Keyword filtering
+                        if keyword:
+                            kw = keyword.lower()
+                            if kw not in subject.lower() and kw not in sender.lower():
+                                continue  # Skip if not match
+
                         results.append({
                             "from": sender or raw_sender,
                             "subject": subject or raw_subject,
                             "date": msg.get("Date")
                         })
+                        
+                        if len(results) >= 5:
+                            break
+                            
             mail.logout()
             return results
         except Exception as e:
-            return [{"error": f"IMAP search failed: {str(e)}"}]
+            return [{"error": f"IMAP Search failed: {str(e)}"}]
 
-    def _send_email(self, to_email: str, subject: str, body: str) -> str:
+    def _send_email(self, to_email: str, subject: str, body: str) -> dict:
         try:
             msg = MIMEMultipart()
-            msg["From"] = self.username
-            msg["To"] = to_email
-            msg["Subject"] = subject
-            msg.attach(MIMEText(body, "plain", "utf-8"))
+            msg['From'] = self.username
+            msg['To'] = to_email
+            msg['Subject'] = subject
+            msg.attach(MIMEText(body, 'plain', 'utf-8'))
 
-            # QQ Email SMTP uses SSL port 465
-            server = smtplib.SMTP_SSL(self.smtp_server, 465)
+            server = smtplib.SMTP_SSL("smtp.qq.com", 465)
             server.login(self.username, self.password)
-            server.sendmail(self.username, to_email, msg.as_string())
+            server.sendmail(self.username, [to_email], msg.as_string())
             server.quit()
-            return f"Email sent successfully to {to_email}"
+            return {"status": "success", "message": f"Send email successful to {to_email}"}
         except Exception as e:
-            return f"Failed to send email: {str(e)}"
-
-    def run(self, input_data: dict) -> dict:
-        action = input_data.get("action")
-        
-        if action == "search":
-            keyword = input_data.get("keyword", "")
-            emails = self._search_emails(keyword)
-            return {"status": "success", "action": "search", "count": len(emails), "data": emails}
-        
-        elif action == "send":
-            to_email = input_data.get("to_email")
-            subject = input_data.get("subject", "No Subject")
-            body = input_data.get("body", "")
-            
-            if not to_email:
-                return {"status": "error", "message": "Missing recipient email address"}
-            
-            res_msg = self._send_email(to_email, subject, body)
-            return {"status": "success", "action": "send", "message": res_msg}
-            
-        return {"status": "error", "message": f"Unknown operation commandS: {action}"}
+            return {"status": "error", "message": f"Failed to send email: {str(e)}"}
