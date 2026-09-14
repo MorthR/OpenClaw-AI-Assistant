@@ -27,8 +27,10 @@ OpenClaw-Assistant/
 └── requirements.txt      # Project dependencies
 ```
 
-##Start the Backend API
+### Start the Backend API
+
 Activate the virtual environment and run the Uvicorn server:
+
 ```bash
 # Windows
 venv\Scripts\activate
