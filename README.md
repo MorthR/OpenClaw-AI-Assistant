@@ -25,8 +25,9 @@ OpenClaw-Assistant/
 │   └── calendar.py       # SQLite-backed calendar skill implementation
 ├── main.py               # FastAPI entry point
 └── requirements.txt      # Project dependencies
+```
 
-### Start the Backend API
+##Start the Backend API
 Activate the virtual environment and run the Uvicorn server:
 ```bash
 # Windows
@@ -34,3 +35,4 @@ venv\Scripts\activate
 
 # Launch Backend Endpoint
 uvicorn main:app --reload
+```
