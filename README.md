@@ -80,3 +80,32 @@ To prevent cross-domain context leakage during tool execution summaries (e.g., c
    ```bash
    uvicorn main:app --reload
    ```
+
+## User Email Setup Guide
+
+To allow the AI Agent to safely access and manage your mailbox (search emails, send messages), you need to provide an App-Specific Password instead of your primary login password.
+
+### Step 1: Obtain App Password based on your email provider
+
+* **Gmail**
+  1. Go to your Google Account Settings.
+  2. Enable 2-Step Verification in the Security tab.
+  3. Search for App Passwords, generate a new password named `OpenClaw Agent`.
+  4. Copy the generated 16-character code.
+
+* **QQ Mail**
+  1. Log in to QQ Mail web page, go to **Settings** > **Accounts**.
+  2. Scroll down to **POP3/IMAP/SMTP/Exchange/CardDAV/CalDAV Services**.
+  3. Enable **POP3/SMTP Service** or **IMAP/SMTP Service**.
+  4. Follow instructions to send SMS and receive your 16-character Authorization Code.
+
+* **Outlook / Office365**
+  1. Log in to your Microsoft Account Security page.
+  2. Select **Advanced security options** > **App passwords** > **Create a new app password**.
+
+### Step 2: Configure Credentials in OpenClaw
+
+1. Open the OpenClaw web portal.
+2. Click on the **Settings** icon in the top right / navigation menu.
+3. Fill in your **Email Address** and the **App Password / Authorization Code** generated in Step 1.
+4. Click **Save & Test Connection**.
