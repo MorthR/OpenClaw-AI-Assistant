@@ -6,44 +6,129 @@
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-    <h2>OpenClaw Local AI Assistant</h2>
-    <div id="chat-box"></div>
-    <div class="input-area">
-        <input type="text" id="userInput" placeholder="Send a message or enter a command" onkeydown="if(event.key==='Enter') send()">
-        <button onclick="send()">Send</button>
+    <div id="login-view" class="view-container">
+        <div class="login-card">
+            <div class="logo-area">
+                <h2>OpenClaw AI</h2>
+                <p>Personal Assistant with Email & Calendar Agent</p>
+            </div>
+            
+            <form onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label for="userEmail">Email Address</label>
+                    <input type="email" id="userEmail" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="authCode">Authorization Code</label>
+                    <input type="password" id="authCode" required>
+                </div>
+
+                <button type="submit" class="btn-login">Start Chat</button>
+            </form>
+            <p class="login-tips">Your credentials are stored locally in your browser and used only to fetch/send emails via agent tools.</p>
+        </div>
+    </div>
+    <div id="chat-view" class="view-container" style="display: none;">
+        <div class="header-container">
+            <div class="header-info">
+                <h2>OpenClaw Assistant</h2>
+                <span id="currentUserDisplay" class="user-badge">user@example.com</span>
+            </div>
+            <button class="logout-btn" onclick="handleLogout()" title="Log out and clear credentials">Logout</button>
+        </div>
+        <div id="chat-box"></div>
+        <div class="input-area">
+            <input type="text" id="userInput" placeholder="Send a message or enter a command..." onkeydown="if(event.key==='Enter') send()">
+            <button onclick="send()">Send</button>
+        </div>
     </div>
 
     <script>
         const chatBox = document.getElementById('chat-box');
 
-        // Auto-load history when the page is loaded
-        async function loadHistory() {
-            const res = await fetch('/api/history');
-            const data = await res.json();
-            data.history.forEach(item => appendMessage(item.role, item.content));
+        function initApp() {
+            const email = localStorage.getItem('user_email');
+            const authCode = localStorage.getItem('user_auth_code');
+
+            if (email && authCode) {
+                showChatView(email);
+            } else {
+                showLoginView();
+            }
         }
 
-        function appendMessage(role, text) {
-            //Ceate a wrapper for the message
+        function showLoginView() {
+            document.getElementById('login-view').style.display = 'flex';
+            document.getElementById('chat-view').style.display = 'none';
+        }
+
+        function showChatView(email) {
+            document.getElementById('login-view').style.display = 'none';
+            document.getElementById('chat-view').style.display = 'flex';
+            document.getElementById('currentUserDisplay').innerText = email;
+            
+            if (chatBox.children.length === 0) {
+                loadHistory();
+            }
+        }
+
+        function handleLogin(event) {
+            event.preventDefault();
+            const email = document.getElementById('userEmail').value.trim();
+            const authCode = document.getElementById('authCode').value.trim();
+
+            if (!email || !authCode) {
+                alert("Please enter both email and authorization code.");
+                return;
+            }
+
+            localStorage.setItem('user_email', email);
+            localStorage.setItem('user_auth_code', authCode);
+
+            showChatView(email);
+        }
+
+        function handleLogout() {
+            if (confirm("Are you sure you want to log out? Local credentials will be cleared.")) {
+                localStorage.removeItem('user_email');
+                localStorage.removeItem('user_auth_code');
+                document.getElementById('userEmail').value = '';
+                document.getElementById('authCode').value = '';
+                chatBox.innerHTML = '';
+                showLoginView();
+            }
+        }
+
+        async function loadHistory() {
+            try {
+                const res = await fetch('/api/history');
+                const data = await res.json();
+                data.history.forEach(item => appendMessage(item.role, item.content));
+            } catch (err) {
+                console.error("Failed to load history:", err);
+            }
+        }
+
+        function appendMessage(role, text = '') {
             const wrapper = document.createElement('div');
             wrapper.className = `msg-wrapper ${role}`;
 
-            //Create a div for the sender's name
             const nameDiv = document.createElement('div');
             nameDiv.className = 'sender-name';
             nameDiv.innerText = role === 'user' ? 'Me' : 'OpenClaw AI';
 
-            //Create a div for the message content
             const msgDiv = document.createElement('div');
             msgDiv.className = 'msg';
             msgDiv.innerText = text;
 
-            //Combine the name and message into the wrapper
             wrapper.appendChild(nameDiv);
             wrapper.appendChild(msgDiv);
             
             chatBox.appendChild(wrapper);
             chatBox.scrollTop = chatBox.scrollHeight;
+
+            return msgDiv;
         }
 
         async function send() {
@@ -54,23 +139,40 @@
             appendMessage('user', text);
             input.value = '';
 
-            const res = await fetch('/api/chat', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ message: text })
-            });
-            const data = await res.json();
+            const assistantMsgDiv = appendMessage('assistant', '');
+            const email = localStorage.getItem('user_email') || '';
+            const authCode = localStorage.getItem('user_auth_code') || '';
 
-            let botMsg = '';
-            if (data.type === 'skill_executed') {
-                botMsg = `[Skill Executed] Skill Executed: ${data.skill}\n` + JSON.stringify(data.data, null, 2);
-            } else {
-                botMsg = data.text;
+            try {
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        message: text,
+                        session_id: "default_user",
+                        email: email,
+                        auth_code: authCode
+                    })
+                });
+
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder("utf-8");
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+
+                    const chunk = decoder.decode(value, { stream: true });
+                    assistantMsgDiv.innerText += chunk;
+                    
+                    chatBox.scrollTop = chatBox.scrollHeight;
+                }
+            } catch (error) {
+                assistantMsgDiv.innerText = "[Network Error or Streaming Interrupted]";
+                console.error("Streaming error:", error);
             }
-            appendMessage('assistant', botMsg);
         }
-
-        loadHistory();
+        initApp();
     </script>
 </body>
 </html>

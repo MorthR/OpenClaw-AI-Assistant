@@ -1,31 +1,152 @@
-/*Set interface styles*/
 html, body {
     height: 100%;
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+    background-color: #f8f9fa;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    color: #212529;
 }
 
-body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+.view-container {
+    width: 100%;
     max-width: 750px;
+    height: 100vh;
     margin: 0 auto;
-    padding: 20px 20px 100px 20px;
-    background-color: #f8f9fa;
-    color: #212529;
+    box-sizing: border-box;
     display: flex;
     flex-direction: column;
-    height: 100vh;
 }
 
-h2 {
+#login-view {
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+.login-card {
+    background: #ffffff;
+    width: 100%;
+    max-width: 400px;
+    padding: 32px 28px;
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+    border: 1px solid #e9ecef;
+}
+
+.logo-area {
     text-align: center;
+    margin-bottom: 28px;
+}
+
+.logo-area h2 {
+    margin: 0 0 8px 0;
+    font-size: 1.75rem;
+    color: #0d6efd;
+}
+
+.logo-area p {
+    margin: 0;
+    font-size: 13px;
+    color: #6c757d;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: #495057;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1px solid #ced4da;
+    border-radius: 8px;
+    font-size: 15px;
+    box-sizing: border-box;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.form-group input:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.15);
+}
+
+.btn-login {
+    width: 100%;
+    padding: 14px;
+    background-color: #0d6efd;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    margin-top: 10px;
+}
+
+.btn-login:hover {
+    background-color: #0b5ed7;
+}
+
+.login-tips {
+    margin-top: 20px;
+    font-size: 12px;
+    color: #8c98a4;
+    line-height: 1.5;
+    text-align: center;
+}
+
+#chat-view {
+    padding: 20px 20px 100px 20px;
+}
+
+.header-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     margin: 10px 0 20px 0;
-    font-size: 1.5rem;
     flex-shrink: 0;
 }
 
-/*Allow chat box to roll*/
+.header-info h2 {
+    margin: 0 0 4px 0;
+    font-size: 1.4rem;
+}
+
+.user-badge {
+    font-size: 12px;
+    background: #e7f1ff;
+    color: #0d6efd;
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-weight: 500;
+}
+
+.logout-btn {
+    padding: 8px 14px;
+    background-color: #ffffff;
+    color: #dc3545;
+    border: 1px solid #f8d7da;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.logout-btn:hover {
+    background-color: #f8d7da;
+}
+
 #chat-box {
     flex: 1;
     overflow-y: auto;
@@ -33,7 +154,6 @@ h2 {
     margin-bottom: 10px;
 }
 
-/*Flex container for messages*/
 .msg-wrapper {
     display: flex;
     flex-direction: column;
@@ -41,19 +161,16 @@ h2 {
     max-width: 80%;
 }
 
-/*right-top*/
 .msg-wrapper.user {
     align-items: flex-end;
     margin-left: auto;
 }
 
-/*left-bottom*/
 .msg-wrapper.assistant {
     align-items: flex-start;
     margin-right: auto;
 }
 
-/*name on bubble*/
 .sender-name {
     font-size: 12px;
     color: #6c757d;
@@ -61,7 +178,6 @@ h2 {
     padding: 0 4px;
 }
 
-/*bubble styles*/
 .msg {
     padding: 10px 14px;
     border-radius: 12px;
@@ -85,12 +201,11 @@ h2 {
     border: 1px solid #dee2e6;
 }
 
-/*Text input area*/
 .input-area {
     position: fixed;
     bottom: 20px;
     left: 50%;
-    transform: translateX(-50%); /*Centered*/
+    transform: translateX(-50%);
     display: flex;
     gap: 12px;
     width: calc(100% - 40px);
@@ -100,7 +215,7 @@ h2 {
     box-sizing: border-box;
 }
 
-input {
+.input-area input {
     flex: 1;
     padding: 14px 18px;
     border: 1px solid #ced4da;
@@ -111,12 +226,12 @@ input {
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
 }
 
-input:focus {
+.input-area input:focus {
     border-color: #0d6efd;
     box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.15);
 }
 
-button {
+.input-area button {
     padding: 14px 28px;
     background-color: #198754;
     color: white;
@@ -129,6 +244,6 @@ button {
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
 }
 
-button:hover {
+.input-area button:hover {
     background-color: #157347;
 }

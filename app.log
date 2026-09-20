@@ -1,0 +1,141 @@
+[2026-09-14 20:17:35] [INFO] [OpenClaw:20] - Received user prompt: '你好，介绍一下你自己' [Session: default_user]
+[2026-09-14 20:17:35] [INFO] [OpenClaw:57] - Sending request to Ollama for tool decision...
+[2026-09-14 20:18:00] [INFO] [OpenClaw:69] - Tool decision step completed in 25.12s
+[2026-09-14 20:18:00] [INFO] [OpenClaw:82] - Decision output parsed. Selected Tool: None
+[2026-09-14 20:18:00] [INFO] [OpenClaw:125] - Process stream completed in 25.24s. Saving history to memory.
+[2026-09-14 21:22:26] [INFO] [OpenClaw:20] - Received user prompt: '你好，介绍一下你自己' [Session: default_user]
+[2026-09-14 21:22:26] [INFO] [OpenClaw:67] - Sending request to Ollama for tool decision...
+[2026-09-14 21:22:32] [INFO] [OpenClaw:80] - Tool decision step completed in 6.23s
+[2026-09-14 21:22:32] [INFO] [OpenClaw:93] - Decision output parsed. Selected Tool: calendar_tool
+[2026-09-14 21:22:32] [INFO] [OpenClaw:98] - Executing skill [calendar_tool] with params: {'action': 'list'}
+[2026-09-14 21:22:32] [INFO] [OpenClaw:101] - Skill [calendar_tool] execution finished in 0.01s
+[2026-09-14 21:22:32] [INFO] [OpenClaw:113] - Starting streaming summarization from Ollama...
+[2026-09-14 21:22:34] [INFO] [OpenClaw:137] - Process stream completed in 8.71s. Saving history to memory.
+[2026-09-14 21:22:55] [INFO] [OpenClaw:20] - Received user prompt: '帮我记一下，明天下午3点开 FYP 项目答辩会议。' [Session: default_user]
+[2026-09-14 21:22:56] [INFO] [OpenClaw:67] - Sending request to Ollama for tool decision...
+[2026-09-14 21:23:00] [INFO] [OpenClaw:80] - Tool decision step completed in 4.20s
+[2026-09-14 21:23:00] [INFO] [OpenClaw:93] - Decision output parsed. Selected Tool: calendar_tool
+[2026-09-14 21:23:00] [INFO] [OpenClaw:98] - Executing skill [calendar_tool] with params: {'action': 'add', 'title': 'FYP项目答辩会议', 'date': '2026-09-15', 'time': '15:00'}
+[2026-09-14 21:23:00] [INFO] [OpenClaw:101] - Skill [calendar_tool] execution finished in 0.03s
+[2026-09-14 21:23:00] [INFO] [OpenClaw:113] - Starting streaming summarization from Ollama...
+[2026-09-14 21:23:02] [INFO] [OpenClaw:137] - Process stream completed in 6.45s. Saving history to memory.
+[2026-09-20 08:59:19] [INFO] [OpenClaw:20] - Received user prompt: '搜索邮箱' [Session: default_user]
+[2026-09-20 08:59:19] [INFO] [OpenClaw:69] - Sending request to Ollama for tool decision...
+[2026-09-20 08:59:22] [INFO] [OpenClaw:82] - Tool decision step completed in 2.81s
+[2026-09-20 08:59:22] [INFO] [OpenClaw:95] - Decision output parsed. Selected Tool: email_tool
+[2026-09-20 08:59:22] [INFO] [OpenClaw:103] - Executing skill [email_tool] with params: {'action': 'search'}
+[2026-09-20 08:59:22] [INFO] [OpenClaw:106] - Skill [email_tool] execution finished in 0.00s
+[2026-09-20 08:59:22] [INFO] [OpenClaw:118] - Starting streaming summarization from Ollama...
+[2026-09-20 08:59:23] [INFO] [OpenClaw:142] - Process stream completed in 4.16s. Saving history to memory.
+[2026-09-20 10:02:05] [INFO] [OpenClaw:20] - Received user prompt: '帮我记一下，明天下午3点开 FYP 项目答辩会议。' [Session: default_user]
+[2026-09-20 10:02:05] [INFO] [OpenClaw:69] - Sending request to Ollama for tool decision...
+[2026-09-20 10:02:07] [INFO] [OpenClaw:82] - Tool decision step completed in 1.65s
+[2026-09-20 10:02:07] [INFO] [OpenClaw:95] - Decision output parsed. Selected Tool: calendar_tool
+[2026-09-20 10:11:00] [INFO] [OpenClaw:21] - Received user prompt: '帮我记一下，明天下午3点开 FYP 项目答辩会议。' [Session: default_user]
+[2026-09-20 10:11:00] [INFO] [OpenClaw:70] - Sending request to Ollama for tool decision...
+[2026-09-20 10:11:01] [INFO] [OpenClaw:83] - Tool decision step completed in 1.21s
+[2026-09-20 10:11:01] [INFO] [OpenClaw:96] - Decision output parsed. Selected Tool: calendar_tool
+[2026-09-20 10:11:01] [INFO] [OpenClaw:101] - Executing skill [calendar_tool] with params: {'action': 'add', 'title': 'FYP项目答辩会议', 'time': '15:00'}
+[2026-09-20 10:11:01] [INFO] [OpenClaw:110] - Skill [calendar_tool] execution finished in 0.01s
+[2026-09-20 10:11:01] [INFO] [OpenClaw:122] - Starting streaming summarization from Ollama...
+[2026-09-20 10:11:02] [INFO] [OpenClaw:146] - Process stream completed in 2.12s. Saving history to memory.
+[2026-09-20 10:19:08] [INFO] [OpenClaw:21] - Received user prompt: '帮我记一下，明天下午3点开 FYP 项目答辩会议。' [Session: default_user]
+[2026-09-20 10:19:08] [INFO] [OpenClaw:70] - Sending request to Ollama for tool decision...
+[2026-09-20 10:19:10] [INFO] [OpenClaw:83] - Tool decision step completed in 2.41s
+[2026-09-20 10:19:10] [INFO] [OpenClaw:96] - Decision output parsed. Selected Tool: calendar_tool
+[2026-09-20 10:19:10] [INFO] [OpenClaw:101] - Executing skill [calendar_tool] with params: {'action': 'add', 'title': 'FYP 项目答辩会议', 'date': '2026-09-21', 'time': '15:00'}
+[2026-09-20 10:19:10] [INFO] [OpenClaw:109] - Skill [calendar_tool] execution finished in 0.01s
+[2026-09-20 10:19:10] [INFO] [OpenClaw:121] - Starting streaming summarization from Ollama...
+[2026-09-20 10:19:11] [INFO] [OpenClaw:145] - Process stream completed in 3.32s. Saving history to memory.
+[2026-09-20 10:19:29] [INFO] [OpenClaw:21] - Received user prompt: '查询明日会议' [Session: default_user]
+[2026-09-20 10:19:29] [INFO] [OpenClaw:70] - Sending request to Ollama for tool decision...
+[2026-09-20 10:19:31] [INFO] [OpenClaw:83] - Tool decision step completed in 1.98s
+[2026-09-20 10:19:31] [INFO] [OpenClaw:96] - Decision output parsed. Selected Tool: calendar_tool
+[2026-09-20 10:19:31] [INFO] [OpenClaw:101] - Executing skill [calendar_tool] with params: {'action': 'list', 'date': '2026-09-21'}
+[2026-09-20 10:19:31] [INFO] [OpenClaw:109] - Skill [calendar_tool] execution finished in 0.00s
+[2026-09-20 10:19:31] [INFO] [OpenClaw:121] - Starting streaming summarization from Ollama...
+[2026-09-20 10:19:32] [INFO] [OpenClaw:145] - Process stream completed in 2.98s. Saving history to memory.
+[2026-09-20 10:19:49] [INFO] [OpenClaw:21] - Received user prompt: '查询最近六封邮件' [Session: default_user]
+[2026-09-20 10:19:49] [INFO] [OpenClaw:70] - Sending request to Ollama for tool decision...
+[2026-09-20 10:19:51] [INFO] [OpenClaw:83] - Tool decision step completed in 1.72s
+[2026-09-20 10:19:51] [INFO] [OpenClaw:96] - Decision output parsed. Selected Tool: email_tool
+[2026-09-20 10:19:51] [INFO] [OpenClaw:101] - Executing skill [email_tool] with params: {'action': 'search', 'count': '6'}
+[2026-09-20 10:19:53] [INFO] [OpenClaw:109] - Skill [email_tool] execution finished in 1.85s
+[2026-09-20 10:19:53] [INFO] [OpenClaw:121] - Starting streaming summarization from Ollama...
+[2026-09-20 10:20:15] [INFO] [OpenClaw:145] - Process stream completed in 26.28s. Saving history to memory.
+[2026-09-20 10:38:44] [INFO] [OpenClaw:21] - Received user prompt: '查询最近六封邮件' [Session: default_user]
+[2026-09-20 10:38:44] [INFO] [OpenClaw:73] - Sending request to Ollama for tool decision...
+[2026-09-20 10:38:48] [INFO] [OpenClaw:86] - Tool decision step completed in 4.51s
+[2026-09-20 10:38:48] [INFO] [OpenClaw:99] - Decision output parsed. Selected Tool: email_tool
+[2026-09-20 10:38:48] [INFO] [OpenClaw:104] - Executing skill [email_tool] with params: {'limit': 6, 'keyword': None}
+[2026-09-20 10:38:49] [INFO] [OpenClaw:112] - Skill [email_tool] execution finished in 1.16s
+[2026-09-20 10:38:49] [INFO] [OpenClaw:124] - Starting streaming summarization from Ollama...
+[2026-09-20 10:38:54] [INFO] [OpenClaw:148] - Process stream completed in 10.62s. Saving history to memory.
+[2026-09-20 10:45:42] [INFO] [OpenClaw:21] - Received user prompt: '查询明天行程' [Session: default_user]
+[2026-09-20 10:45:42] [INFO] [OpenClaw:73] - Sending request to Ollama for tool decision...
+[2026-09-20 10:45:48] [INFO] [OpenClaw:86] - Tool decision step completed in 6.28s
+[2026-09-20 10:45:48] [INFO] [OpenClaw:99] - Decision output parsed. Selected Tool: calendar_tool
+[2026-09-20 10:45:48] [INFO] [OpenClaw:104] - Executing skill [calendar_tool] with params: {'action': 'add', 'title': "Tomorrow's Trip", 'date': '2026-09-21'}
+[2026-09-20 10:45:48] [INFO] [OpenClaw:112] - Skill [calendar_tool] execution finished in 0.01s
+[2026-09-20 10:45:48] [INFO] [OpenClaw:124] - Starting streaming summarization from Ollama...
+[2026-09-20 10:45:49] [INFO] [OpenClaw:148] - Process stream completed in 7.53s. Saving history to memory.
+[2026-09-20 10:45:54] [INFO] [OpenClaw:21] - Received user prompt: '查询最近六封邮件' [Session: default_user]
+[2026-09-20 10:45:54] [INFO] [OpenClaw:73] - Sending request to Ollama for tool decision...
+[2026-09-20 10:45:59] [INFO] [OpenClaw:86] - Tool decision step completed in 5.47s
+[2026-09-20 10:45:59] [INFO] [OpenClaw:99] - Decision output parsed. Selected Tool: None
+[2026-09-20 10:45:59] [INFO] [OpenClaw:148] - Process stream completed in 5.48s. Saving history to memory.
+[2026-09-20 10:46:23] [INFO] [OpenClaw:21] - Received user prompt: '查询最近六封邮件' [Session: default_user]
+[2026-09-20 10:46:23] [INFO] [OpenClaw:73] - Sending request to Ollama for tool decision...
+[2026-09-20 10:46:25] [INFO] [OpenClaw:86] - Tool decision step completed in 2.34s
+[2026-09-20 10:46:25] [INFO] [OpenClaw:99] - Decision output parsed. Selected Tool: email_tool
+[2026-09-20 10:46:25] [INFO] [OpenClaw:104] - Executing skill [email_tool] with params: {'limit': '6'}
+[2026-09-20 10:46:26] [INFO] [OpenClaw:112] - Skill [email_tool] execution finished in 0.96s
+[2026-09-20 10:46:26] [INFO] [OpenClaw:124] - Starting streaming summarization from Ollama...
+[2026-09-20 10:46:31] [INFO] [OpenClaw:148] - Process stream completed in 8.44s. Saving history to memory.
+[2026-09-20 10:47:39] [INFO] [OpenClaw:21] - Received user prompt: '查询最近六封邮件' [Session: default_user]
+[2026-09-20 10:47:39] [INFO] [OpenClaw:73] - Sending request to Ollama for tool decision...
+[2026-09-20 10:47:42] [INFO] [OpenClaw:86] - Tool decision step completed in 3.22s
+[2026-09-20 10:47:42] [INFO] [OpenClaw:99] - Decision output parsed. Selected Tool: email_tool
+[2026-09-20 10:47:42] [INFO] [OpenClaw:104] - Executing skill [email_tool] with params: {'limit': '6'}
+[2026-09-20 10:47:43] [INFO] [OpenClaw:112] - Skill [email_tool] execution finished in 0.87s
+[2026-09-20 10:47:43] [INFO] [OpenClaw:126] - Starting streaming summarization from Ollama...
+[2026-09-20 10:47:55] [INFO] [OpenClaw:152] - Process stream completed in 16.23s. Saving history to memory.
+[2026-09-20 10:48:43] [INFO] [OpenClaw:21] - Received user prompt: '帮我给23266716@life.hkbu.edu.hk发送一个邮件，内容是“你好，我在进行测试”' [Session: default_user]
+[2026-09-20 10:48:43] [INFO] [OpenClaw:73] - Sending request to Ollama for tool decision...
+[2026-09-20 10:48:48] [INFO] [OpenClaw:86] - Tool decision step completed in 5.06s
+[2026-09-20 10:48:48] [INFO] [OpenClaw:99] - Decision output parsed. Selected Tool: email_tool
+[2026-09-20 10:48:48] [INFO] [OpenClaw:104] - Executing skill [email_tool] with params: {'action': 'send', 'email_address': '23266716@life.hkbu.edu.hk', 'content': '你好，我在进行测试'}
+[2026-09-20 10:48:48] [INFO] [OpenClaw:112] - Skill [email_tool] execution finished in 0.30s
+[2026-09-20 10:48:48] [INFO] [OpenClaw:126] - Starting streaming summarization from Ollama...
+[2026-09-20 10:48:52] [INFO] [OpenClaw:152] - Process stream completed in 8.74s. Saving history to memory.
+[2026-09-20 11:07:17] [INFO] [OpenClaw:21] - Received user prompt: '帮我给23266716@life.hkbu.edu.hk发送一个邮件，内容是“你好，我在进行测试”' [Session: default_user]
+[2026-09-20 11:07:17] [INFO] [OpenClaw:73] - Sending request to Ollama for tool decision...
+[2026-09-20 11:07:23] [INFO] [OpenClaw:86] - Tool decision step completed in 6.34s
+[2026-09-20 11:07:23] [INFO] [OpenClaw:99] - Decision output parsed. Selected Tool: email_tool
+[2026-09-20 11:07:23] [INFO] [OpenClaw:104] - Executing skill [email_tool] with params: {'action': 'send', 'to': '23266716@life.hkbu.edu.hk', 'content': '你好，我在进行测试'}
+[2026-09-20 11:07:23] [INFO] [OpenClaw:112] - Skill [email_tool] execution finished in 0.00s
+[2026-09-20 11:07:23] [INFO] [OpenClaw:126] - Starting streaming summarization from Ollama...
+[2026-09-20 11:07:25] [INFO] [OpenClaw:152] - Process stream completed in 8.02s. Saving history to memory.
+[2026-09-20 11:33:11] [INFO] [OpenClaw:21] - Received user prompt: '帮我给23266716@life.hkbu.edu.hk发送一个邮件，内容是‘你好，我在进行测试' [Session: default_user]
+[2026-09-20 11:33:11] [INFO] [OpenClaw:73] - Sending request to Ollama for tool decision...
+[2026-09-20 11:33:16] [INFO] [OpenClaw:86] - Tool decision step completed in 5.22s
+[2026-09-20 11:33:16] [INFO] [OpenClaw:99] - Decision output parsed. Selected Tool: calendar_tool
+[2026-09-20 11:33:16] [INFO] [OpenClaw:104] - Executing skill [calendar_tool] with params: {'action': 'list', 'date': '2026-09-21'}
+[2026-09-20 11:33:16] [INFO] [OpenClaw:112] - Skill [calendar_tool] execution finished in 0.00s
+[2026-09-20 11:33:16] [INFO] [OpenClaw:141] - Starting streaming summarization from Ollama...
+[2026-09-20 11:35:45] [INFO] [OpenClaw:21] - Received user prompt: '帮我给23266716@life.hkbu.edu.hk发送一个邮件，内容是‘你好，我在进行测试' [Session: default_user]
+[2026-09-20 11:35:46] [INFO] [OpenClaw:78] - Sending request to Ollama for tool decision...
+[2026-09-20 11:35:49] [INFO] [OpenClaw:91] - Tool decision step completed in 3.09s
+[2026-09-20 11:35:49] [INFO] [OpenClaw:104] - Decision output parsed. Selected Tool: email_tool
+[2026-09-20 11:35:49] [INFO] [OpenClaw:109] - Executing skill [email_tool] with params: {'to_email': '23266716@life.hkbu.edu.hk', 'subject': '你好，我在进行测试', 'body': '你好，我在进行测试'}
+[2026-09-20 11:35:50] [INFO] [OpenClaw:117] - Skill [email_tool] execution finished in 1.05s
+[2026-09-20 11:35:50] [INFO] [OpenClaw:130] - Starting streaming summarization from Ollama...
+[2026-09-20 11:35:55] [INFO] [OpenClaw:156] - Process stream completed in 9.85s. Saving history to memory.
+[2026-09-20 11:39:38] [INFO] [OpenClaw:21] - Received user prompt: '帮我给23266716@life.hkbu.edu.hk发送一个邮件，内容是‘你好，我在进行测试' [Session: default_user]
+[2026-09-20 11:39:38] [INFO] [OpenClaw:77] - Sending request to Ollama for tool decision...
+[2026-09-20 11:39:42] [INFO] [OpenClaw:90] - Tool decision step completed in 4.76s
+[2026-09-20 11:39:42] [INFO] [OpenClaw:103] - Decision output parsed. Selected Tool: email_tool
+[2026-09-20 11:39:42] [INFO] [OpenClaw:108] - Executing skill [email_tool] with params: {'action': 'send', 'to_email': '23266716@life.hkbu.edu.hk', 'subject': '你好，我在进行测试', 'body': '你好，我在进行测试'}
+[2026-09-20 11:39:43] [INFO] [OpenClaw:116] - Skill [email_tool] execution finished in 0.68s
+[2026-09-20 11:39:43] [INFO] [OpenClaw:129] - Starting streaming summarization from Ollama...
+[2026-09-20 11:39:44] [INFO] [OpenClaw:155] - Process stream completed in 6.78s. Saving history to memory.

@@ -8,16 +8,15 @@ class CalendarSkill(BaseSkill):
         self._init_db()
 
     def _init_db(self):
-        """Initialize the calendar database table"""
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.cursor()
             cursor.execute("""
                 CREATE TABLE IF NOT EXISTS events (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     title TEXT NOT NULL,
-                    event_date TEXT NOT NULL, -- 格式: YYYY-MM-DD
-                    event_time TEXT DEFAULT '全天',
-                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                    event_date TEXT NOT NULL,
+                    event_time TEXT,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
             """)
             conn.commit()
@@ -60,13 +59,13 @@ class CalendarSkill(BaseSkill):
             }
         }
 
-    def run(self, params: dict) -> dict:
+    def run(self, params: dict, user_credentials: dict = None) -> dict:
         action = params.get("action", "list")
         
         raw_date = params.get("date", "today")
-        if not raw_date or raw_date.lower() in ["today", "今天"]:
+        if not raw_date or raw_date.lower() in ["today"]:
             target_date = datetime.now().strftime("%Y-%m-%d")
-        elif raw_date.lower() in ["tomorrow", "明天"]:
+        elif raw_date.lower() in ["tomorrow"]:
             target_date = (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d")
         else:
             target_date = raw_date

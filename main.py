@@ -1,47 +1,60 @@
 import os
+from typing import Optional
+import anyio
 from fastapi import FastAPI
-from fastapi.responses import HTMLResponse
+from fastapi.responses import StreamingResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from skills.registry import SkillRegistry
-from skills.qq_email import EmailSkill
+from skills.email import EmailSkill
 from skills.calendar import CalendarSkill
 
 from agent.core import AgentCore
 from agent.memory import MemoryManager
 
-QQ_USER = "519656964@qq.com"
-QQ_PASS = "xavrsazgrpuvcbaf"
-
 memory = MemoryManager()
 registry = SkillRegistry()
 
-registry.register(EmailSkill(username=QQ_USER, password=QQ_PASS))
+registry.register(EmailSkill())
 registry.register(CalendarSkill())
 
-agent = AgentCore(registry=registry, memory=memory)
+agent = AgentCore(registry=registry, memory=memory, model_name="qwen2.5:1.5b")
 
-#Initialize FastAPI app and mount static files
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 class ChatRequest(BaseModel):
     message: str
+    session_id: str = "default_user"
+    email: Optional[str] = None
+    auth_code: Optional[str] = None
 
 @app.post("/api/chat")
-def chat(req: ChatRequest):
-    #Save the conversation to memory
-    response_data = agent.process(req.message)
-    return response_data
+async def chat(req: ChatRequest):
+    credentials = {
+        "email": req.email,
+        "auth_code": req.auth_code
+    } if req.email and req.auth_code else None
+
+    return StreamingResponse(
+        agent.process_stream(
+            user_prompt=req.message, 
+            session_id=req.session_id,
+            user_credentials=credentials
+        ),
+        media_type="text/plain; charset=utf-8"
+    )
 
 @app.get("/api/history")
 def get_history():
     """Load local chat history"""
     return {"history": memory.get_recent_history(limit=20)}
 
-@app.get("/", response_class=HTMLResponse)
-def index():
+@app.get("/")
+async def index():
     """Return the HTML frontend page"""
-    with open("static/index.html", "r", encoding="utf-8") as f:
-        return f.read()
+    html_path = os.path.join("static", "index.html")
+    if not os.path.exists(html_path):
+        return {"error": "index.html not found under static/ directory"}
+    return FileResponse(html_path)
