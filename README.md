@@ -87,19 +87,19 @@ To allow the AI Agent to safely access and manage your mailbox (search emails, s
 
 ### Step 1: Obtain App Password based on your email provider
 
-* **Gmail**
+**Gmail**
   1. Go to your Google Account Settings.
   2. Enable 2-Step Verification in the Security tab.
   3. Search for App Passwords, generate a new password named `OpenClaw Agent`.
   4. Copy the generated 16-character code.
 
-* **QQ Mail**
+**QQ Mail**
   1. Log in to QQ Mail web page, go to **Settings** > **Accounts**.
   2. Scroll down to **POP3/IMAP/SMTP/Exchange/CardDAV/CalDAV Services**.
   3. Enable **POP3/SMTP Service** or **IMAP/SMTP Service**.
   4. Follow instructions to send SMS and receive your 16-character Authorization Code.
 
-* **Outlook / Office365**
+**Outlook / Office365**
   1. Log in to your Microsoft Account Security page.
   2. Select **Advanced security options** > **App passwords** > **Create a new app password**.
 
