@@ -18,12 +18,18 @@ OpenClaw-Assistant/
 ├── agent/
 │   ├── core.py           # LLM decision loop and prompt engineering
 │   └── memory.py         # Conversation history management
+├── config/
+│   └── logger.py         # Application log setup
 ├── skills/
 │   ├── base.py           # Abstract Base Skill class
 │   ├── registry.py       # Centralized skill registry
 │   ├── email.py          # Email skill implementation
 │   └── calendar.py       # SQLite-backed calendar skill implementation
+├── static/
+│   ├── index.html        # Web interface layout
+│   └── style.css         # UI styles and stylesheets
 ├── main.py               # FastAPI entry point
+├── README.md             # Project documentation
 └── requirements.txt      # Project dependencies
 ```
 
@@ -47,7 +53,7 @@ To prevent cross-domain context leakage during tool execution summaries (e.g., c
 1. **Clone the repository:**
 
    ```bash
-   git clone https://github.com/your-username/OpenClaw-Assistant.git
+   git clone https://github.com/MorthR/OpenClaw-Assistant.git
    cd OpenClaw-Assistant
    ```
 
