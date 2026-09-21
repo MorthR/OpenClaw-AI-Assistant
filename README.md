@@ -95,8 +95,8 @@ To allow the AI Agent to safely access and manage your mailbox (search emails, s
 
 **QQ Mail**
   1. Log in to QQ Mail web page, go to **Settings** > **Accounts**.
-  2. Scroll down to **POP3/IMAP/SMTP/Exchange/CardDAV/CalDAV Services**.
-  3. Enable **POP3/SMTP Service** or **IMAP/SMTP Service**.
+  2. Scroll down to **IMAP/SMTP Services**.
+  3. Enable **IMAP/SMTP Service**.
   4. Follow instructions to send SMS and receive your 16-character Authorization Code.
 
 **Outlook / Office365**
@@ -106,6 +106,5 @@ To allow the AI Agent to safely access and manage your mailbox (search emails, s
 ### Step 2: Configure Credentials in OpenClaw
 
 1. Open the OpenClaw web portal.
-2. Click on the **Settings** icon in the top right / navigation menu.
-3. Fill in your **Email Address** and the **App Password / Authorization Code** generated in Step 1.
+2. Fill in your **Email Address** and the **App Password / Authorization Code** generated in Step 1.
 4. Click **Save & Test Connection**.
