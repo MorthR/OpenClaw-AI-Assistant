@@ -1,0 +1,113 @@
+[2026-10-03 09:59:34] [INFO] [OpenClaw:33] - Received user prompt: 'hello, pls introduce yourself' [Session: default_user]
+[2026-10-03 09:59:34] [INFO] [OpenClaw:89] - Sending request to Ollama for tool decision...
+[2026-10-03 09:59:34] [ERROR] [OpenClaw:104] - Failed to communicate with Ollama: 'AgentCore' object has no attribute 'ollama_url'
+[2026-10-03 10:09:39] [INFO] [OpenClaw:33] - Received user prompt: 'HELLO pls introduce yourself' [Session: default_user]
+[2026-10-03 10:09:39] [INFO] [OpenClaw:89] - Sending request to Ollama for tool decision...
+[2026-10-03 10:09:39] [ERROR] [OpenClaw:104] - Failed to communicate with Ollama: 'AgentCore' object has no attribute 'ollama_url'
+[2026-10-03 10:12:42] [INFO] [OpenClaw:39] - Received user prompt: 'hello, pls introduce yourself' [Session: default_user]
+[2026-10-03 10:12:42] [INFO] [OpenClaw:95] - Sending request to Ollama for tool decision...
+[2026-10-03 10:12:42] [ERROR] [OpenClaw:110] - Failed to communicate with Ollama: 'AgentCore' object has no attribute 'ollama_url'
+[2026-10-03 14:53:00] [INFO] [OpenClaw:38] - Received user prompt: 'hello, pls introduce yourself' [Session: default_user]
+[2026-10-03 14:53:00] [INFO] [OpenClaw:94] - Sending request to Ollama for tool decision...
+[2026-10-03 14:53:00] [INFO] [OpenClaw:107] - Tool decision step completed in 0.19s
+[2026-10-03 14:53:00] [INFO] [OpenClaw:120] - Decision output parsed. Selected Tool: None
+[2026-10-03 14:53:00] [INFO] [OpenClaw:173] - Process stream completed in 0.24s. Saving history to memory.
+[2026-10-03 14:53:37] [INFO] [OpenClaw:38] - Received user prompt: 'give me five last emails in the bos' [Session: default_user]
+[2026-10-03 14:53:37] [INFO] [OpenClaw:94] - Sending request to Ollama for tool decision...
+[2026-10-03 14:53:37] [INFO] [OpenClaw:107] - Tool decision step completed in 0.19s
+[2026-10-03 14:53:37] [INFO] [OpenClaw:120] - Decision output parsed. Selected Tool: None
+[2026-10-03 14:53:37] [INFO] [OpenClaw:173] - Process stream completed in 0.22s. Saving history to memory.
+[2026-10-03 14:57:25] [INFO] [OpenClaw:38] - Received user prompt: 'hello, pls introduce yourself' [Session: default_user]
+[2026-10-03 14:57:25] [INFO] [OpenClaw:93] - Sending request to Ollama for tool decision...
+[2026-10-03 14:57:25] [INFO] [OpenClaw:106] - Tool decision step completed in 0.18s
+[2026-10-03 14:57:25] [INFO] [OpenClaw:121] - Decision output parsed. Selected Tool: None
+[2026-10-03 14:57:25] [INFO] [OpenClaw:181] - Process stream completed in 0.23s. Saving history to memory.
+[2026-10-03 14:58:08] [INFO] [OpenClaw:33] - ✅ LLM 密钥已加载，正在使用模型: qwen2.5:1.5b
+[2026-10-03 14:58:17] [INFO] [OpenClaw:42] - Received user prompt: 'hello, pls introduce yourself' [Session: default_user]
+[2026-10-03 14:58:17] [INFO] [OpenClaw:79] - Sending request to API for tool decision...
+[2026-10-03 14:58:17] [ERROR] [OpenClaw:98] - API Error Response: {'error': {'message': 'The supported API model names are deepseek-flash, deepseek-v4-pro, but you passed qwen2.5:1.5b. (request_id: 7981c9e7-2f39-4d43-bf41-4be9d9d9171e)', 'type': 'invalid_request_error', 'param': None, 'code': 'invalid_request_error'}}
+[2026-10-03 14:58:27] [INFO] [OpenClaw:42] - Received user prompt: 'give me five last emails in the box' [Session: default_user]
+[2026-10-03 14:58:27] [INFO] [OpenClaw:79] - Sending request to API for tool decision...
+[2026-10-03 14:58:27] [ERROR] [OpenClaw:98] - API Error Response: {'error': {'message': 'The supported API model names are deepseek-flash, deepseek-v4-pro, but you passed qwen2.5:1.5b. (request_id: 5b1a0bc3-e8c0-42c1-b4db-d2e0b26e48f0)', 'type': 'invalid_request_error', 'param': None, 'code': 'invalid_request_error'}}
+[2026-10-03 15:04:29] [INFO] [OpenClaw:38] - Received user prompt: 'give me five last emails in the box' [Session: default_user]
+[2026-10-03 15:04:29] [INFO] [OpenClaw:93] - Sending request to Ollama for tool decision...
+[2026-10-03 15:04:30] [INFO] [OpenClaw:106] - Tool decision step completed in 1.06s
+[2026-10-03 15:04:30] [INFO] [OpenClaw:121] - Decision output parsed. Selected Tool: None
+[2026-10-03 15:04:30] [INFO] [OpenClaw:181] - Process stream completed in 1.11s. Saving history to memory.
+[2026-10-03 15:06:27] [INFO] [OpenClaw:38] - Received user prompt: 'hello pls introduce yourself' [Session: default_user]
+[2026-10-03 15:06:27] [INFO] [OpenClaw:93] - Sending request to Ollama for tool decision...
+[2026-10-03 15:06:29] [INFO] [OpenClaw:106] - Tool decision step completed in 1.46s
+[2026-10-03 15:06:29] [INFO] [OpenClaw:121] - Decision output parsed. Selected Tool: None
+[2026-10-03 15:06:29] [INFO] [OpenClaw:181] - Process stream completed in 1.51s. Saving history to memory.
+[2026-10-03 15:06:50] [INFO] [OpenClaw:33] - ✅ LLM 密钥已加载，正在使用模型: deepseek-flash
+[2026-10-03 15:07:07] [INFO] [OpenClaw:33] - ✅ LLM 密钥已加载，正在使用模型: deepseek-flash
+[2026-10-03 15:07:15] [INFO] [OpenClaw:42] - Received user prompt: 'hello pls introduce yourself' [Session: default_user]
+[2026-10-03 15:07:15] [INFO] [OpenClaw:79] - Sending request to API for tool decision...
+[2026-10-03 15:07:16] [INFO] [OpenClaw:103] - 👉 [LLM Raw Response]: {"tool": null, "response": "Hello! I'm your personal assistant. I can help you with a few things:\n\n📧 **Email** – I can read, search, and send emails for you.\n\n📅 **Calendar** – I can help manage your schedule, add new events, and show you what's on your calendar for today or any date you specify.\n\nHow can I help you today?"}
+[2026-10-03 15:07:16] [INFO] [OpenClaw:117] - Decision output parsed. Selected Tool: None
+[2026-10-03 15:23:34] [INFO] [OpenClaw:38] - Received user prompt: 'hello pls introduce yourself' [Session: default_user]
+[2026-10-03 15:23:34] [INFO] [OpenClaw:85] - Sending request to API for tool decision...
+[2026-10-03 15:23:35] [INFO] [OpenClaw:105] - LLM Raw Output: {"tool": null, "response": "你好！我是你的个人智能助理，很高兴为你服务。😊\n\n我可以帮你做以下几件事：\n\n📧 **邮件管理** – 帮你阅读、搜索和发送邮件。\n\n📅 **日程管理** – 帮你添加新的日程安排，查询今天或指定日期的日程列表。\n\n有什么我可以帮你的吗？"}
+[2026-10-03 15:23:35] [INFO] [OpenClaw:121] - Decision output parsed. Selected Tool: None
+[2026-10-03 15:23:35] [INFO] [OpenClaw:181] - Process stream completed in 1.24s. Saving history to memory.
+[2026-10-03 15:24:41] [INFO] [OpenClaw:38] - Received user prompt: 'hello pls introduce yourself' [Session: default_user]
+[2026-10-03 15:24:41] [INFO] [OpenClaw:85] - Sending request to API for tool decision...
+[2026-10-03 15:24:43] [INFO] [OpenClaw:105] - LLM Raw Output: {"tool": null, "response": "你好！我是你的个人助理，很高兴为你服务！😊\n\n我可以帮你做这些事情：\n\n📧 **邮件管理** – 读取、搜索和发送邮件\n\n📅 **日程管理** – 添加新的日程安排，查询今天或指定日期的日程列表\n\n有什么需要帮忙的，尽管告诉我！"}
+[2026-10-03 15:24:43] [INFO] [OpenClaw:121] - Decision output parsed. Selected Tool: None
+[2026-10-03 15:24:43] [INFO] [OpenClaw:181] - Process stream completed in 1.25s. Saving history to memory.
+[2026-10-03 15:36:30] [INFO] [OpenClaw:38] - Received user prompt: 'hello pls introduce yourself' [Session: default_user]
+[2026-10-03 15:36:30] [INFO] [OpenClaw:85] - Sending request to API for tool decision...
+[2026-10-03 15:36:31] [INFO] [OpenClaw:105] - LLM Raw Output: {"tool": null, "response": "你好！我是你的个人助理。我可以帮你处理以下事务：\n\n📧 **邮件** —— 读取、搜索和发送邮件。\n\n📅 **日历** —— 管理你的日程安排，添加新事件，并查询今天或指定日期的日程。\n\n有什么我可以帮你的吗？"}
+[2026-10-03 15:36:31] [INFO] [OpenClaw:121] - Decision output parsed. Selected Tool: None
+[2026-10-03 15:36:31] [INFO] [OpenClaw:185] - Process stream completed in 0.97s. Saving history to memory.
+[2026-10-03 15:37:06] [INFO] [OpenClaw:38] - Received user prompt: 'hello pls introduce yourself' [Session: default_user]
+[2026-10-03 15:37:06] [INFO] [OpenClaw:85] - Sending request to API for tool decision...
+[2026-10-03 15:37:07] [INFO] [OpenClaw:105] - LLM Raw Output: {"tool": null, "response": "你好！我是你的个人智能助手。我可以帮你处理两件事：\n\n📧 **邮件** —— 我可以帮你阅读、搜索和发送邮件。\n\n📅 **日历** —— 我可以帮你管理日程，添加新的活动，或者查看今天（或你指定日期）的日程安排。\n\n有什么需要帮忙的吗？😊"}
+[2026-10-03 15:37:07] [INFO] [OpenClaw:121] - Decision output parsed. Selected Tool: None
+[2026-10-03 15:37:07] [INFO] [OpenClaw:185] - Process stream completed in 1.07s. Saving history to memory.
+[2026-10-03 15:37:30] [INFO] [OpenClaw:38] - Received user prompt: 'introduce yourself' [Session: default_user]
+[2026-10-03 15:37:30] [INFO] [OpenClaw:85] - Sending request to API for tool decision...
+[2026-10-03 15:37:30] [INFO] [OpenClaw:105] - LLM Raw Output: {"tool": null, "response": "你好！我是你的AI个人助理。我可以帮你处理邮件（阅读、搜索、发送）以及管理日程（添加新事件、查询今天或指定日期的安排）。有什么我可以帮你的吗？"}
+[2026-10-03 15:37:30] [INFO] [OpenClaw:121] - Decision output parsed. Selected Tool: None
+[2026-10-03 15:37:31] [INFO] [OpenClaw:185] - Process stream completed in 0.88s. Saving history to memory.
+[2026-10-03 15:38:21] [INFO] [OpenClaw:38] - Received user prompt: 'give me five last emails in the box' [Session: default_user]
+[2026-10-03 15:38:21] [INFO] [OpenClaw:85] - Sending request to API for tool decision...
+[2026-10-03 15:38:22] [INFO] [OpenClaw:105] - LLM Raw Output: {"tool": "email_tool", "parameters": {"action": "search", "limit": 5}}
+[2026-10-03 15:38:22] [INFO] [OpenClaw:121] - Decision output parsed. Selected Tool: None
+[2026-10-03 15:38:22] [INFO] [OpenClaw:185] - Process stream completed in 0.91s. Saving history to memory.
+[2026-10-03 15:52:55] [INFO] [OpenClaw:38] - Received user prompt: 'hello pls introduce yourself' [Session: default_user]
+[2026-10-03 15:52:55] [INFO] [OpenClaw:85] - Sending request to API for tool decision...
+[2026-10-03 15:52:56] [INFO] [OpenClaw:105] - LLM Raw Output: {"tool": null, "response": "你好！我是你的AI个人助理，可以帮你阅读、搜索和发送邮件，也能管理你的日程安排，比如添加新事件或查询某一天的日程。有什么需要帮忙的吗？"}
+[2026-10-03 15:52:56] [INFO] [OpenClaw:121] - Decision output parsed. Selected Tool: None
+[2026-10-03 15:52:56] [INFO] [OpenClaw:126] - Decision output parsed. Selected Tool: None
+[2026-10-03 15:53:04] [INFO] [OpenClaw:38] - Received user prompt: 'give me five last emails in the box' [Session: default_user]
+[2026-10-03 15:53:04] [INFO] [OpenClaw:85] - Sending request to API for tool decision...
+[2026-10-03 15:53:05] [INFO] [OpenClaw:105] - LLM Raw Output: {"tool": "email_tool", "parameters": {"action": "search", "limit": 5}}
+[2026-10-03 15:53:05] [INFO] [OpenClaw:121] - Decision output parsed. Selected Tool: None
+[2026-10-03 15:53:05] [INFO] [OpenClaw:126] - Decision output parsed. Selected Tool: None
+[2026-10-03 15:53:42] [INFO] [OpenClaw:38] - Received user prompt: 'hello pls introduce yourself' [Session: default_user]
+[2026-10-03 15:53:42] [INFO] [OpenClaw:85] - Sending request to API for tool decision...
+[2026-10-03 15:53:43] [INFO] [OpenClaw:105] - LLM Raw Output: {"tool": null, "response": "你好！我是你的AI个人助理，可以帮你阅读、搜索和发送邮件，也能帮你管理和查询日程安排。有什么我可以帮你的吗？"}
+[2026-10-03 15:53:43] [INFO] [OpenClaw:121] - Decision output parsed. Selected Tool: None
+[2026-10-03 15:53:43] [INFO] [OpenClaw:126] - Decision output parsed. Selected Tool: None
+[2026-10-03 15:53:43] [INFO] [OpenClaw:187] - Process stream completed in 1.58s. Saving history to memory.
+[2026-10-03 15:54:04] [INFO] [OpenClaw:38] - Received user prompt: 'hello pls introduce yourself' [Session: default_user]
+[2026-10-03 15:54:04] [INFO] [OpenClaw:85] - Sending request to API for tool decision...
+[2026-10-03 15:54:05] [INFO] [OpenClaw:105] - LLM Raw Output: {"tool": null, "response": "你好！我是你的AI个人助理，可以帮你处理邮件、管理日程安排，也能陪你聊天、解答问题。有什么我可以帮你的吗？"}
+[2026-10-03 15:54:05] [INFO] [OpenClaw:121] - Decision output parsed. Selected Tool: None
+[2026-10-03 15:54:05] [INFO] [OpenClaw:126] - Decision output parsed. Selected Tool: None
+[2026-10-03 15:54:05] [INFO] [OpenClaw:187] - Process stream completed in 0.98s. Saving history to memory.
+[2026-10-03 15:56:06] [INFO] [OpenClaw:33] - LLM key loaded successfully. Using model: deepseek-flash
+[2026-10-03 15:56:18] [INFO] [OpenClaw:42] - Received user prompt: 'hello pls introduce yourself' [Session: default_user]
+[2026-10-03 15:56:18] [INFO] [OpenClaw:78] - Sending request to API for decision...
+[2026-10-03 15:56:19] [INFO] [OpenClaw:102] - LLM Raw Output: {"tool": null, "parameters": null, "response": "Hello! I'm your AI personal assistant. I can help you manage emails—reading, searching, and sending—as well as organize your calendar by adding events and checking your schedule. Just let me know what you'd like to do, and I'll take care of it for you!"}
+[2026-10-03 15:56:19] [INFO] [OpenClaw:119] - Decision output parsed. Selected Tool: None
+[2026-10-03 15:56:19] [INFO] [OpenClaw:194] - Process stream completed in 1.34s. Saved history to memory.
+[2026-10-03 15:56:54] [INFO] [OpenClaw:42] - Received user prompt: 'give me five last emails in the box' [Session: default_user]
+[2026-10-03 15:56:54] [INFO] [OpenClaw:78] - Sending request to API for decision...
+[2026-10-03 15:56:55] [INFO] [OpenClaw:102] - LLM Raw Output: {"tool": "email_tool", "parameters": {"action": "search", "limit": 5, "sort": "latest"}, "response": null}
+[2026-10-03 15:56:55] [INFO] [OpenClaw:119] - Decision output parsed. Selected Tool: email_tool
+[2026-10-03 15:56:55] [INFO] [OpenClaw:125] - Executing skill [email_tool] with params: {'action': 'search', 'limit': 5, 'sort': 'latest'}
+[2026-10-03 15:56:56] [INFO] [OpenClaw:133] - Skill [email_tool] execution completed in 1.11s. Result: {'status': 'success', 'count': 5, 'emails': [{'from': '"MTR Mobile" <noreply.mtrmobile@marketing.mtr.com.hk> ', 'subject': '[October Exclusive]  MTR Malls Octofun Instant Win – More Fun, More Rewards!', 'date': 'Fri, 02 Oct 2026 23:18:11 +0800'}, {'from': '"its_boc@bochk.com" <its_boc@bochk.com>', 'subject': 'BOC Card Apple Pay Transaction Notification', 'date': 'Fri, 2 Oct 2026 18:35:43 +0800 (HKT)'}, {'from': '綠色和平 夏淳權 <no-reply@email.greenpeace.org.hk>', 'subject': '黃金周速報：破邊洲迫爆五大亂象', 'date': 'Fri, 2 Oct 2026 19:08:58 +0800'}, {'from': '"Octopus Cards Limited" <noreply@marketing.octopus.com.hk>', 'subject': '於JHC真好城購物滿$120減$15；登記成為會員並於J Fun APP綁定八達通，即享$10優惠券！', 'date': 'Fri, 2 Oct 2026 04:05:19 +0000'}, {'from': 'Days Inn by Wyndham Singapore Novena <newsletter@wwhotels.com>', 'subject': 'Unlock 15% OFF at Days Inn by Wyndham Singapore Novena', 'date': 'Fri,  2 Oct 2026 08:36:07 +0000'}]}
+[2026-10-03 15:56:56] [INFO] [OpenClaw:145] - Starting streaming summarization from LLM API...
+[2026-10-03 15:56:59] [INFO] [OpenClaw:194] - Process stream completed in 5.03s. Saved history to memory.

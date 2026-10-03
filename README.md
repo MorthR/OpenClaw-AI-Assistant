@@ -57,7 +57,12 @@ To prevent cross-domain context leakage during tool execution summaries (e.g., c
    cd OpenClaw-Assistant
    ```
 
-2. **Create and activate a virtual environment:**
+2. **Allow PowerShell to run local script (need only set up once)**
+  ```bash
+  Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+  ```
+
+3. **Create and activate a virtual environment:**
 
    ```bash
    python -m venv venv
@@ -80,6 +85,9 @@ To prevent cross-domain context leakage during tool execution summaries (e.g., c
    ```bash
    uvicorn main:app --reload
    ```
+
+5. **Open the webpage**
+  127.0.0.1:8000
 
 ## User Email Setup Guide
 

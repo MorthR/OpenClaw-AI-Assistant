@@ -19,7 +19,7 @@ registry = SkillRegistry()
 registry.register(EmailSkill())
 registry.register(CalendarSkill())
 
-agent = AgentCore(registry=registry, memory=memory, model_name="qwen2.5:1.5b")
+agent = AgentCore(registry=registry, memory=memory, model_name="deepseek-flash")
 
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")

@@ -21,7 +21,7 @@ class MemoryManager:
             try:
                 cursor.execute("ALTER TABLE history ADD COLUMN category TEXT DEFAULT 'general'")
             except sqlite3.OperationalError:
-                pass  # Column already exists
+                pass  #if column already exists
             conn.commit()
 
     def add_record(self, session_id: str, role: str, content: str, category: str = "general"):
