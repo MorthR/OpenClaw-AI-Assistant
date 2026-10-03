@@ -52,39 +52,40 @@ To prevent cross-domain context leakage during tool execution summaries (e.g., c
 
 1. **Clone the repository:**
 
-   ```bash
-   git clone https://github.com/MorthR/OpenClaw-Assistant.git
-   cd OpenClaw-Assistant
-   ```
+  ```bash
+  git clone https://github.com/MorthR/OpenClaw-Assistant.git
+  cd OpenClaw-Assistant
+  ```
 
 2. **Allow PowerShell to run local script (need only set up once)**
-  ```bash
-  Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
-  ```
+   
+   ```bash
+   Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+   ```
 
 3. **Create and activate a virtual environment:**
 
-   ```bash
-   python -m venv venv
+  ```bash
+  python -m venv venv
    
-   # On Windows
-   venv\Scripts\activate
+  # On Windows
+  venv\Scripts\activate
    
-   # On Linux/macOS
-   source venv/bin/activate
-   ```
+  # On Linux/macOS
+  source venv/bin/activate
+  ```
 
 3. **Install required dependencies:**
 
-   ```bash
-   pip install -r requirements.txt
-   ```
+  ```bash
+  pip install -r requirements.txt
+  ```
 
 4. **Run the application server:**
 
-   ```bash
-   uvicorn main:app --reload
-   ```
+  ```bash
+  uvicorn main:app --reload
+  ```
 
 5. **Open the webpage**
   127.0.0.1:8000
@@ -96,23 +97,26 @@ To allow the AI Agent to safely access and manage your mailbox (search emails, s
 ### Step 1: Obtain App Password based on your email provider
 
 **Gmail**
+
   1. Go to your Google Account Settings.
   2. Enable 2-Step Verification in the Security tab.
   3. Search for App Passwords, generate a new password named `OpenClaw Agent`.
   4. Copy the generated 16-character code.
 
 **QQ Mail**
+
   1. Log in to QQ Mail web page, go to **Settings** > **Accounts**.
   2. Scroll down to **IMAP/SMTP Services**.
   3. Enable **IMAP/SMTP Service**.
   4. Follow instructions to send SMS and receive your 16-character Authorization Code.
 
 **Outlook / Office365**
+
   1. Log in to your Microsoft Account Security page.
   2. Select **Advanced security options** > **App passwords** > **Create a new app password**.
 
 ### Step 2: Configure Credentials in OpenClaw
 
-1. Open the OpenClaw web portal.
-2. Fill in your **Email Address** and the **App Password / Authorization Code** generated in Step 1.
-4. Click **Save & Test Connection**.
+  1. Open the OpenClaw web portal.
+  2. Fill in your **Email Address** and the **App Password / Authorization Code** generated in Step 1.
+  4. Click **Save & Test Connection**.
