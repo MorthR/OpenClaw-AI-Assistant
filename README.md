@@ -59,9 +59,9 @@ To prevent cross-domain context leakage during tool execution summaries (e.g., c
 
 2. **Allow PowerShell to run local script (need only set up once)**
    
-   ```bash
-   Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
-   ```
+  ```bash
+  Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+  ```
 
 3. **Create and activate a virtual environment:**
 
