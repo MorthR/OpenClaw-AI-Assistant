@@ -4,17 +4,29 @@ import time
 import anyio
 import httpx
 import inspect
+import os
 from typing import AsyncGenerator
 from skills.registry import SkillRegistry
 from agent.memory import MemoryManager
 from config.logger import logger
 
 class AgentCore:
-    def __init__(self, registry: SkillRegistry, memory: MemoryManager, model_name: str = "qwen2.5:7b", ollama_url: str = "http://localhost:11434/api/generate"):
+    def __init__(
+        self, 
+        registry: SkillRegistry, 
+        memory: MemoryManager, 
+        model_name: str = os.getenv("LLM_MODEL", "deepseek-flash"),
+        base_url: str = os.getenv("LLM_BASE_URL", "https://api.deepseek.com"),
+        api_key: str = os.getenv("LLM_API_KEY", "")
+    ):
         self.registry = registry
         self.memory = memory
         self.model_name = model_name
-        self.ollama_url = ollama_url
+        self.base_url = base_url.rstrip("/")
+        self.headers = {
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json"
+        }
 
     async def process_stream(self, user_prompt: str, session_id: str = "default_user", user_credentials: dict = None) -> AsyncGenerator[str, None]:
         start_time = time.time()
