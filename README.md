@@ -68,11 +68,11 @@ To prevent cross-domain context leakage during tool execution summaries (e.g., c
   ```bash
   python -m venv venv
   ``` 
-  #### On Windows
+  **On Windows**
   ```
   venv\Scripts\activate
   ```
-  #### On Linux/macOS
+  **On Linux/macOS**
   ```
   source venv/bin/activate
   ```
