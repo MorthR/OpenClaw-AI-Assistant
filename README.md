@@ -53,8 +53,8 @@ To prevent cross-domain context leakage during tool execution summaries (e.g., c
 1. **Clone the repository:**
 
   ```bash
-  git clone https://github.com/MorthR/OpenClaw-Assistant.git
-  cd OpenClaw-Assistant
+  git clone https://github.com/MorthR/OpenClaw-AI-Assistant.git
+  cd OpenClaw-AI-Assistant
   ```
 
 2. **Allow PowerShell to run local script (need only set up once)**
