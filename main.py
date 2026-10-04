@@ -58,3 +58,7 @@ async def index():
     if not os.path.exists(html_path):
         return {"error": "index.html not found under static/ directory"}
     return FileResponse(html_path)
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=False)

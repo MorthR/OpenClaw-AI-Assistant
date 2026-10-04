@@ -1,10 +1,10 @@
 import json
 import datetime
 import time
-import anyio
 import httpx
 import inspect
 import os
+import anyio
 from typing import AsyncGenerator
 from dotenv import load_dotenv
 from skills.registry import SkillRegistry
@@ -12,6 +12,12 @@ from agent.memory import MemoryManager
 from config.logger import logger
 
 load_dotenv()
+
+api_key = os.getenv("LLM_API_KEY", "")
+if not api_key:
+    print("LLM_API_KEY is empty. Please check your .env file.")
+else:
+    print(f"LLM_API_KEY loaded successfully (Length: {len(api_key)}).")
 
 class AgentCore:
     def __init__(
@@ -53,24 +59,24 @@ class AgentCore:
             history_text = "[Chat History]:\n" + "\n".join([f"{item['role']}: {item['content']}" for item in history_records]) + "\n\n"
 
         system_prompt = f"""You are an intelligent personal assistant.
-[Current Time Baseline]:
-- Today's Date is: {current_date_str} ({weekday_str}).
+    [Current Time Baseline]:
+    - Today's Date is: {current_date_str} ({weekday_str}).
 
-Available tools:
-{json.dumps(available_skills, ensure_ascii=False, indent=2)}
+    Available tools:
+    {json.dumps(available_skills, ensure_ascii=False, indent=2)}
 
-{history_text}CRITICAL ROUTING RULES:
-1. If the user asks to check, read, fetch, search, or send emails, you MUST set "tool" to "email_tool".
-2. If a tool is required, fill "tool" with the tool name and provide "parameters". Set "response" to null.
-3. If NO tool is required (general conversation, greeting, self-introduction), set "tool" to null and provide "response".
+    {history_text}CRITICAL ROUTING RULES:
+    1. If the user asks to check, read, fetch, search, or send emails, you MUST set "tool" to "email_tool".
+    2. If a tool is required, fill "tool" with the tool name and provide "parameters". Set "response" to null.
+    3. If NO tool is required (general conversation, greeting, self-introduction), set "tool" to null and provide "response".
 
-EXPECTED OUTPUT FORMAT (JSON):
-For Tool Execution:
-{{"tool": "email_tool", "parameters": {{"action": "search", "limit": 5}}, "response": null}}
+    EXPECTED OUTPUT FORMAT (JSON):
+    For Tool Execution:
+    {{"tool": "email_tool", "parameters": {{"action": "search", "limit": 5}}, "response": null}}
 
-For Direct Chat:
-{{"tool": null, "parameters": null, "response": "Hello! How can I assist you today?"}}
-"""
+    For Direct Chat:
+    {{"tool": null, "parameters": null, "response": "Hello! How can I assist you today?"}}
+    """
 
         full_assistant_reply = ""
 
@@ -133,15 +139,15 @@ For Direct Chat:
                 logger.info(f"Skill [{tool_name}] execution completed in {time.time() - tool_start:.2f}s. Result: {execution_res}")
                 
                 summary_prompt = f"""You are a professional personal AI assistant.
-Today's date is {current_date_str} ({weekday_str}).
-User request: "{user_prompt}"
-Tool [{tool_name}] execution result:
-{json.dumps(execution_res, ensure_ascii=False)}
+                Today's date is {current_date_str} ({weekday_str}).
+                User request: "{user_prompt}"
+                Tool [{tool_name}] execution result:
+                {json.dumps(execution_res, ensure_ascii=False)}
 
-Instructions:
-1. Summarize the tool result clearly and concisely for the user.
-2. Use clear, plain text in English.
-"""
+                Instructions:
+                1. Summarize the tool result clearly and concisely for the user.
+                2. Use clear, plain text in English.
+                """
                 logger.info("Starting streaming summarization from LLM API...")
                 async with client.stream(
                     "POST",

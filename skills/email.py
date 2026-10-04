@@ -1,9 +1,11 @@
+from ast import Dict
 import imaplib
 import smtplib
 import email
 from email.header import decode_header
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from typing import Any
 from .base import BaseSkill
 
 class EmailSkill(BaseSkill):
@@ -66,6 +68,21 @@ class EmailSkill(BaseSkill):
             return ("imap.gmail.com", 993), ("smtp.gmail.com", 465)
         else:
             return (f"imap.{domain}", 993), (f"smtp.{domain}", 465)
+
+    def extract_schedule_events(self, limit: int = 5) -> Dict[str, Any]:
+        keywords = ["meeting", "schedule", "invitation", "date", "discusstion", "appointment", "conference", "call", "webinar"]
+        found_emails = []
+        for kw in keywords:
+            results = self.search_emails(query=kw, limit=limit)
+        for email in results:
+            if email not in found_emails:
+                found_emails.append(email)
+
+        return {
+            "status": "success",
+            "candidate_count": len(found_emails),
+            "emails": found_emails[:limit]
+        }
 
     def run(self, params: dict, user_credentials: dict = None):
         user_email = user_credentials.get("email") if user_credentials else None
