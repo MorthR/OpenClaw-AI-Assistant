@@ -58,24 +58,36 @@ class AgentCore:
         if history_records:
             history_text = "[Chat History]:\n" + "\n".join([f"{item['role']}: {item['content']}" for item in history_records]) + "\n\n"
 
-        system_prompt = f"""You are an intelligent personal assistant.
+        system_prompt = f"""You are an autonomous personal assistant (OpenClaw AI).
     [Current Time Baseline]:
     - Today's Date is: {current_date_str} ({weekday_str}).
 
     Available tools:
     {json.dumps(available_skills, ensure_ascii=False, indent=2)}
 
-    {history_text}CRITICAL ROUTING RULES:
-    1. If the user asks to check, read, fetch, search, or send emails, you MUST set "tool" to "email_tool".
-    2. If a tool is required, fill "tool" with the tool name and provide "parameters". Set "response" to null.
-    3. If NO tool is required (general conversation, greeting, self-introduction), set "tool" to null and provide "response".
+    {history_text}CRITICAL ROUTING & INTENT RULES:
+    1. EXPANDED SCHEDULE SCOPE: Detect and extract ANY schedule items (Meetings, Class/Course changes, Deadlines, Travel/Flight bookings, Entertainment/Concerts, Bills/Reminders).
+    2. RELATIVE TIME PARSING: Convert relative times ("tomorrow 2pm", "next Wednesday") to standard YYYY-MM-DD and HH:MM based on today's baseline ({current_date_str}).
+    3. EMAIL ROUTING: If user asks to check, read, search, or send emails, set "tool" to "email_tool".
+    4. CALENDAR ROUTING: If user asks to view/add/update schedule items, set "tool" to "calendar_tool".
+    5. SUGGESTED CHIPS: Always suggest 2-3 short, context-aware action chips for proactive interaction in "suggested_chips".
 
     EXPECTED OUTPUT FORMAT (JSON):
     For Tool Execution:
-    {{"tool": "email_tool", "parameters": {{"action": "search", "limit": 5}}, "response": null}}
+    {{
+        "tool": "calendar_tool",
+        "parameters": {{"action": "add", "title": "AI Course Midterm", "date": "2026-10-20", "time": "14:00", "category": "course"}},
+        "suggested_chips": ["Check Weekly Schedule", "Check for New Notification Emails"],
+        "response": null
+    }}
 
     For Direct Chat:
-    {{"tool": null, "parameters": null, "response": "Hello! How can I assist you today?"}}
+    {{
+        "tool": null,
+        "parameters": null,
+        "suggested_chips": ["Check Latest Emails", "Organize Today's Tasks", "View This Week's Class Changes"],
+        "response": "Hello! How can I help manage your schedule or check your emails today?"
+    }}
     """
 
         full_assistant_reply = ""
@@ -146,8 +158,21 @@ class AgentCore:
 
                 Instructions:
                 1. Summarize the tool result clearly and concisely for the user.
-                2. Use clear, plain text in English.
+                2. Explicitly highlight if any event was added or skipped due to duplicate detection.
+                3. Use clear, plain text in English.
+
+                STRICT CALENDAR FORMAT RULES:
+                1. ALL user facing outputs for calendar events MUST be in ENGLISH only.
+                2. When the user asks to list current or all schedules, display ALL retrieved events from the tool response.
+                3. EVERY event in the output list MUST strictly follow this exact Markdown format:
+                - YYYY-MM-DD | [TIME] | [CATEGORY] Title
+
+                Example Output:
+                - 2026-10-20 | 17:00 | [COURSE] Coding Course Assignment DDL
+                - 2026-10-21 | 14:00 | [COURSE] AI Course Assignment DDL
+                - 2026-10-21 | All Day | [HOLIDAY_BIRTHDAY] Brother's Birthday
                 """
+
                 logger.info("Starting streaming summarization from LLM API...")
                 async with client.stream(
                     "POST",

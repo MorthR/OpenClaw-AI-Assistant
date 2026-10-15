@@ -13,6 +13,8 @@ from skills.calendar import CalendarSkill
 from agent.core import AgentCore
 from agent.memory import MemoryManager
 
+from fastapi.responses import Response
+
 memory = MemoryManager()
 registry = SkillRegistry()
 
@@ -58,6 +60,48 @@ async def index():
     if not os.path.exists(html_path):
         return {"error": "index.html not found under static/ directory"}
     return FileResponse(html_path)
+
+from fastapi.responses import Response
+
+@app.get("/calendar/feed.ics")
+def get_ics_feed():
+    """Export standard iCalendar (.ics) feed in English."""
+    import sqlite3
+    import re
+    from datetime import datetime
+
+    ics_content = [
+        "BEGIN:VCALENDAR",
+        "VERSION:2.0",
+        "PRODID:-//OpenClaw AI Personal Agent//EN",
+        "X-WR-CALNAME:OpenClaw AI Schedule"
+    ]
+
+    with sqlite3.connect("calendar.db") as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT title, event_date, event_time, category FROM events")
+        rows = cursor.fetchall()
+        for title, e_date, e_time, cat in rows:
+            clean_title = re.sub(r'^\s*\[[A-Za-z0-9_-]+\]\s*', '', title).strip()
+            ics_content.append("BEGIN:VEVENT")
+            ics_content.append(f"SUMMARY:[{cat.upper()}] {clean_title}")
+            
+            if e_time in ["All Day"]:
+                dt_str = e_date.replace("-", "")
+                ics_content.append(f"DTSTART;VALUE=DATE:{dt_str}")
+            else:
+                try:
+                    dt = datetime.strptime(f"{e_date} {e_time}", "%Y-%m-%d %H:%M")
+                    dt_str = dt.strftime("%Y%m%dT%H%M%S")
+                    ics_content.append(f"DTSTART:{dt_str}")
+                except Exception:
+                    dt_str = e_date.replace("-", "")
+                    ics_content.append(f"DTSTART;VALUE=DATE:{dt_str}")
+
+            ics_content.append("END:VEVENT")
+
+    ics_content.append("END:VCALENDAR")
+    return Response(content="\r\n".join(ics_content), media_type="text/calendar")
 
 if __name__ == "__main__":
     import uvicorn
