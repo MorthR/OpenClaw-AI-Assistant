@@ -25,12 +25,6 @@ class CalendarSkill(BaseSkill):
                     UNIQUE(title, event_date, event_time)
                 )
             """)
-            cursor.execute("PRAGMA table_info(events)")
-            columns = [column[1] for column in cursor.fetchall()]
-            if "category" not in columns:
-                cursor.execute("ALTER TABLE events ADD COLUMN category TEXT DEFAULT 'general'")
-            if "is_all_day" not in columns:
-                cursor.execute("ALTER TABLE events ADD COLUMN is_all_day INTEGER DEFAULT 0")
             conn.commit()
 
     @property
@@ -39,7 +33,7 @@ class CalendarSkill(BaseSkill):
 
     @property
     def description(self) -> str:
-        return "A tool for managing personal schedule, supporting adding, querying, and deduplicating events."
+        return "A tool for managing personal schedule, supporting adding, querying, deduplicating, and conflict checking."
 
     @property
     def schema(self) -> dict:
@@ -51,103 +45,95 @@ class CalendarSkill(BaseSkill):
                 "properties": {
                     "action": {
                         "type": "string",
-                        "description": "Operation type: 'add' or 'list'",
-                        "enum": ["add", "list", "read", "check", "query"]
+                        "description": "Operation type: 'add', 'add_batch', or 'list'",
+                        "enum": ["add", "add_batch", "list", "read", "check", "query"]
                     },
                     "title": {
                         "type": "string",
-                        "description": "Event title, e.g., 'Brother\'s Birthday' or 'Coding Course Assignment DDL'"
+                        "description": "Event title"
                     },
                     "date": {
                         "type": "string",
-                        "description": "Date YYYY-MM-DD, 'today', 'tomorrow', or 'all' (default to 'all' for general list requests)"
+                        "description": "Date YYYY-MM-DD"
                     },
                     "time": {
                         "type": "string",
-                        "description": "Specific time (e.g. '17:00'). Set 'All Day' for all-day events"
+                        "description": "Specific time (e.g. '10:00'). Default 'All Day'"
                     },
                     "category": {
                         "type": "string",
-                        "description": "Category: 'meeting', 'course', 'entertainment', 'deadline', 'holiday_birthday', or 'general'"
+                        "description": "Category: 'meeting', 'course', 'entertainment', 'deadline', or 'general'"
                     },
-                    "is_all_day": {
-                        "type": "boolean",
-                        "description": "Set True for birthdays, holidays, or events without specific time"
+                    "events": {
+                        "type": "array",
+                        "description": "Array of event objects for batch processing",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "title": {"type": "string"},
+                                "date": {"type": "string"},
+                                "time": {"type": "string"},
+                                "category": {"type": "string"}
+                            }
+                        }
                     }
                 },
                 "required": ["action"]
             }
         }
 
-    def _clean_and_translate_title(self, title: str) -> str:
-        """Strip prefixes and map terms to clean English title."""
-        cleaned = re.sub(r'^\s*\[[A-Za-z0-9_-]+\]\s*', '', title).strip()
-        
-        if "编程" in cleaned or "coding" in cleaned.lower():
-            if "作业" in cleaned or "assignment" in cleaned.lower() or "ddl" in cleaned.lower():
-                return "Coding Course Assignment DDL"
-            return "Coding Class"
-        if "弟弟" in cleaned or "brother" in cleaned.lower():
-            if "生日" in cleaned or "birthday" in cleaned.lower():
-                return "Brother's Birthday"
-        if "ai" in cleaned.lower() and ("作业" in cleaned or "assignment" in cleaned.lower()):
-            return "AI Course Assignment DDL"
-            
-        return cleaned
-
-    def _is_similar(self, t1: str, t2: str) -> bool:
-        """Check logical identity between two titles."""
-        n1, n2 = t1.lower(), t2.lower()
-        return n1 == n2 or n1 in n2 or n2 in n1
-
     def run(self, params: dict, user_credentials: dict = None) -> dict:
-        raw_action = str(params.get("action", "list")).lower()
+        action = str(params.get("action", "list")).lower()
         
-        if raw_action in ["read", "query", "get", "check", "show", "search", "list"]:
-            action = "list"
-        elif raw_action in ["sync", "update", "retry", "add"]:
-            action = "add"
-        else:
-            action = "list"
-
-        raw_date = str(params.get("date", "all")).lower()
-        start_date = params.get("start_date")
-        
-        # Default query logic: if user asks for current/all schedule without explicit single date, default to 'all'
-        if action == "list":
-            if start_date or raw_date in ["all", "range", "none", "null", "", "today"]:
-                target_date = "all"
-            elif raw_date == "tomorrow":
-                target_date = (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d")
-            else:
-                target_date = raw_date
-        else:
-            if raw_date in ["today", "none", "null", ""]:
-                target_date = datetime.now().strftime("%Y-%m-%d")
-            elif raw_date == "tomorrow":
-                target_date = (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d")
-            else:
-                target_date = raw_date
-
-        if action == "add":
-            raw_title = params.get("title", "Unnamed Event")
-            title = self._clean_and_translate_title(raw_title)
-            time_str = params.get("time") or "All Day"
-            category = params.get("category", "general")
-            is_all_day = params.get("is_all_day", False)
-            
-            if category in ["holiday_birthday", "birthday"] or time_str in ["All Day", "全天", ""]:
-                is_all_day = True
-                time_str = "All Day"
-
-            return self._add_local_event(title, target_date, time_str, category, 1 if is_all_day else 0)
-
-        elif action == "list":
+        if action in ["read", "query", "get", "check", "show", "search", "list"]:
+            target_date = str(params.get("date", "all")).lower()
             return self._list_events(target_date)
 
-        return {"status": "error", "message": f"Unknown action: {raw_action}"}
+        elif action == "add":
+            title = params.get("title", "Unnamed Event")
+            event_date = params.get("date") or datetime.now().strftime("%Y-%m-%d")
+            event_time = params.get("time") or "All Day"
+            category = params.get("category", "general")
+            return self._add_with_conflict_check(title, event_date, event_time, category)
 
-    def _add_local_event(self, title: str, event_date: str, event_time: str, category: str, is_all_day: int) -> dict:
+        elif action == "add_batch":
+            events = params.get("events", [])
+            results = []
+            for item in events:
+                res = self._add_with_conflict_check(
+                    item.get("title", "Unnamed Event"),
+                    item.get("date", datetime.now().strftime("%Y-%m-%d")),
+                    item.get("time", "All Day"),
+                    item.get("category", "general")
+                )
+                results.append(res)
+            return {"status": "success", "batch_results": results}
+
+        return {"status": "error", "message": f"Unknown action: {action}"}
+
+    def _check_time_conflict(self, event_date: str, event_time: str) -> List[dict]:
+        """Check if any event exists on the same date and time."""
+        if event_time == "All Day":
+            return []
+            
+        conflicts = []
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                cursor = conn.cursor()
+                cursor.execute(
+                    "SELECT title, event_time, category FROM events WHERE event_date = ? AND event_time = ?",
+                    (event_date, event_time)
+                )
+                rows = cursor.fetchall()
+                for title, e_time, cat in rows:
+                    conflicts.append({"title": title, "time": e_time, "category": cat})
+        except Exception:
+            pass
+        return conflicts
+
+    def _add_with_conflict_check(self, title: str, event_date: str, event_time: str, category: str) -> dict:
+        conflicts = self._check_time_conflict(event_date, event_time)
+        
         try:
             with sqlite3.connect(self.db_path) as conn:
                 cursor = conn.cursor()
@@ -158,55 +144,36 @@ class CalendarSkill(BaseSkill):
                 if cursor.fetchone():
                     return {
                         "status": "skipped",
-                        "message": f"Event '{title}' on {event_date} ({event_time}) already exists."
+                        "message": f"Event '{title}' on {event_date} at {event_time} already exists."
                     }
 
                 cursor.execute(
                     "INSERT INTO events (title, event_date, event_time, category, is_all_day) VALUES (?, ?, ?, ?, ?)",
-                    (title, event_date, event_time, category, is_all_day)
+                    (title, event_date, event_time, category, 1 if event_time == "All Day" else 0)
                 )
                 conn.commit()
-            
-            event_type = "All-Day Event" if is_all_day else f"Timed Event ({event_time})"
-            return {
+
+            res = {
                 "status": "success",
-                "message": f"Successfully saved {event_type}: [{category.upper()}] '{title}' on {event_date}"
+                "message": f"Saved event: [{category.upper()}] '{title}' on {event_date} at {event_time}"
             }
+            if conflicts:
+                res["conflict_warning"] = f"Warning: Event time {event_time} overlaps with existing event '{conflicts[0]['title']}'."
+            return res
         except Exception as e:
-            return {"status": "error", "message": f"Failed to save to local database: {str(e)}"}
+            return {"status": "error", "message": f"Failed to save event: {str(e)}"}
 
     def _list_events(self, target_date: str) -> dict:
         try:
             with sqlite3.connect(self.db_path) as conn:
                 cursor = conn.cursor()
                 if target_date == "all":
-                    cursor.execute(
-                        "SELECT title, event_date, event_time, category, is_all_day FROM events ORDER BY event_date ASC, id ASC"
-                    )
+                    cursor.execute("SELECT title, event_date, event_time, category FROM events ORDER BY event_date ASC, event_time ASC")
                 else:
-                    cursor.execute(
-                        "SELECT title, event_date, event_time, category, is_all_day FROM events WHERE event_date = ? ORDER BY is_all_day DESC, id ASC",
-                        (target_date,)
-                    )
+                    cursor.execute("SELECT title, event_date, event_time, category FROM events WHERE event_date = ? ORDER BY event_time ASC", (target_date,))
+                
                 rows = cursor.fetchall()
-
-                merged_events = []
-                for title, e_date, e_time, cat, is_all_day in rows:
-                    clean_title = self._clean_and_translate_title(title)
-                    merged_events.append({
-                        "title": clean_title,
-                        "date": e_date,
-                        "time": "All Day" if is_all_day else e_time,
-                        "category": cat.lower(),
-                        "is_all_day": bool(is_all_day)
-                    })
-
-                return {
-                    "status": "success",
-                    "query_date": target_date,
-                    "count": len(merged_events),
-                    "download_url": "http://127.0.0.1:8000/calendar/download",
-                    "events": merged_events
-                }
+                events = [{"title": r[0], "date": r[1], "time": r[2], "category": r[3]} for r in rows]
+                return {"status": "success", "count": len(events), "events": events}
         except Exception as e:
             return {"status": "error", "message": f"Failed to list events: {str(e)}"}

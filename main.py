@@ -2,7 +2,7 @@ import os
 import sqlite3
 import re
 import asyncio
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Optional
 from urllib.parse import urlparse
 from contextlib import asynccontextmanager
@@ -33,6 +33,31 @@ triggered_reminders = set()
 pending_notifications = []
 
 
+def check_schedule_conflict(event_date: str, event_time: str) -> Optional[str]:
+    """Check if the proposed event date and time conflict with existing events in calendar.db."""
+    if not os.path.exists("calendar.db"):
+        return None
+        
+    try:
+        with sqlite3.connect("calendar.db") as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                "SELECT title, event_time FROM events WHERE event_date = ?",
+                (event_date,)
+            )
+            existing = cursor.fetchall()
+            
+            for title, ex_time in existing:
+                if ex_time == "All Day" or event_time == "All Day":
+                    return f"Conflicts with All-Day event: '{title}'"
+                if ex_time == event_time:
+                    return f"Exact time overlap with: '{title}' at {ex_time}"
+    except Exception as e:
+        print(f"Conflict check database error: {e}")
+        
+    return None
+
+
 async def auto_reminder_checker():
     """Background async task: Checks calendar event reminders every 10 seconds."""
     while True:
@@ -55,7 +80,7 @@ async def auto_reminder_checker():
                         if unique_key not in triggered_reminders:
                             triggered_reminders.add(unique_key)
                             print(f"\n==================================================")
-                            print(f"[AUTOMATIC PROACTIVE REMINDER ALERT]")
+                            print(f"⏰ [AUTOMATIC PROACTIVE REMINDER ALERT]")
                             print(f"Time: {e_date} {e_time}")
                             print(f"Type: [{str(cat).upper()}] {title}")
                             print("==================================================\n")
@@ -164,10 +189,15 @@ def get_ics_feed():
 
 
 @app.get("/api/proactive-suggestions")
-def get_proactive_suggestions(session_id: str = "default_user"):
-    """Endpoint called when interface opens: Filter out past events for today."""
+def get_proactive_suggestions(
+    session_id: str = "default_user", 
+    email: Optional[str] = None, 
+    auth_code: Optional[str] = None,
+    is_idle_pulse: bool = False
+):
     now = datetime.now()
     today_str = now.strftime("%Y-%m-%d")
+    tomorrow_str = (now + timedelta(days=1)).strftime("%Y-%m-%d")
     current_time_str = now.strftime("%H:%M")
     
     upcoming_today_events = []
@@ -185,26 +215,80 @@ def get_proactive_suggestions(session_id: str = "default_user"):
                 if e_time == "All Day" or e_time >= current_time_str:
                     upcoming_today_events.append((title, e_time, cat))
 
+    important_schedules = []
+
+    if email and auth_code:
+        try:
+            email_skill = registry.get("email_tool")
+            if email_skill:
+                mail_res = email_skill.run(
+                    {"action": "search", "limit": 20},
+                    user_credentials={"email": email, "auth_code": auth_code}
+                )
+                if mail_res.get("status") == "success":
+                    emails = mail_res.get("emails", [])
+                    
+                    schedule_keywords = ["meeting", "schedule", "call", "due", "appointment", "flight", "invite", "interview", "deadline", "conference"]
+                    ignore_keywords = ["ad", "offer", "discount", "sale", "points", "rebate", "newsletter", "promotion", "calendar export", "my calendar"]
+
+                    for m in emails:
+                        subj = m.get("subject", "")
+                        snip = m.get("snippet", "")
+                        text = (subj + " " + snip).lower()
+                        
+                        if any(kw in text for kw in schedule_keywords) and not any(ikw in text for ikw in ignore_keywords):
+                            clean_subj = re.sub(r'^(Re|Fwd):\s*', '', subj, flags=re.IGNORECASE).strip()
+                            prop_date = tomorrow_str
+                            prop_time = "10:00"
+                            conflict_warning = check_schedule_conflict(prop_date, prop_time)
+                            
+                            important_schedules.append({
+                                "title": clean_subj,
+                                "date": prop_date,
+                                "time": prop_time,
+                                "conflict": conflict_warning
+                            })
+        except Exception as e:
+            print(f"Silent auto email check error: {e}")
+
+    greeting = "System Pulse Check:" if is_idle_pulse else f"👋 Welcome back! (Today: {today_str})"
+
     if upcoming_today_events:
         event_summary = "; ".join([f"[{e[2].upper()}] {e[0]} at {e[1]}" for e in upcoming_today_events])
-        greeting = f"Welcome back! Here is your remaining schedule summary for today ({today_str}): {event_summary}."
+        greeting += f"\n- Remaining events today: {event_summary}"
     else:
-        greeting = f"Welcome back! You have no upcoming events remaining for today ({today_str}). Would you like to log any future meetings, classes, or activities?"
+        greeting += f"\n- Remaining events today: None."
+
+    inline_choices = []
+    
+    if important_schedules:
+        greeting += f"\n\nDetected {len(important_schedules)} Schedule Proposal(s) from Email Inbox:"
+        for item in important_schedules[:2]:
+            conflict_str = f" ⚠️ [{item['conflict']}]" if item['conflict'] else ""
+            greeting += f"\n• {item['title']} (Proposed: {item['date']} at {item['time']}){conflict_str}"
+        
+        greeting += "\n\nWould you like to process and add these events into your calendar?"
+        
+        for s in important_schedules[:2]:
+            inline_choices.append(f"Yes, add schedule: {s['title']} on {s['date']} at {s['time']}")
+        
+        inline_choices.append("No, thanks")
+    else:
+        pass
 
     return {
         "greeting": greeting,
+        "inline_choices": inline_choices,
         "suggested_chips": [
-            "Log a new meeting or call",
-            "Add class/course schedule",
-            "Record entertainment activity",
-            "Export full calendar file"
+            "Check recent email details",
+            "Recommend schedule from emails",
+            "List my calendar"
         ]
     }
 
 
 @app.get("/api/reminders/pending")
 def get_pending_reminders():
-    """API endpoint for frontend to poll and consume new reminder popups."""
     global pending_notifications
     alerts = list(pending_notifications)
     pending_notifications.clear()

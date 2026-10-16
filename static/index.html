@@ -26,6 +26,29 @@
             background-color: #4f46e5;
             color: #ffffff;
         }
+        .inline-buttons-container {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-top: 10px;
+        }
+        .inline-choice-btn {
+            background-color: #ffffff;
+            color: #2563eb;
+            border: 1px solid #93c5fd;
+            border-radius: 8px;
+            padding: 8px 12px;
+            font-size: 13px;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+        .inline-choice-btn:hover {
+            background-color: #2563eb;
+            color: #ffffff;
+            border-color: #2563eb;
+        }
     </style>
 </head>
 <body>
@@ -72,13 +95,25 @@
     <script>
         const chatBox = document.getElementById('chat-box');
         const chipsArea = document.getElementById('chips-area');
+        const userInput = document.getElementById('userInput');
         
+        let lastActivityTime = Date.now();
+        let isGenerating = false;
+        let isUserFocusedOnInput = false;
+
         const defaultChips = [
-            "Log a new meeting or call",
-            "Add class/course schedule",
-            "Record entertainment activity",
-            "Export full calendar file"
+            "Check recent email details",
+            "Recommend schedule from emails",
+            "List my calendar"
         ];
+
+        userInput.addEventListener('focus', () => { isUserFocusedOnInput = true; });
+        userInput.addEventListener('blur', () => { isUserFocusedOnInput = false; });
+        userInput.addEventListener('input', () => { lastActivityTime = Date.now(); });
+
+        ['mousemove', 'click', 'scroll'].forEach(evt => {
+            window.addEventListener(evt, () => { lastActivityTime = Date.now(); });
+        });
 
         function initApp() {
             const email = localStorage.getItem('user_email');
@@ -108,10 +143,10 @@
             renderChips(defaultChips);
 
             if (chatBox.children.length === 0) {
-                loadHistoryAndProactiveSuggestions();
+                loadHistoryAndProactiveSuggestions(false);
             }
 
-            startReminderPolling();
+            startBackgroundWatchers();
         }
 
         function handleLogin(event) {
@@ -142,17 +177,22 @@
             }
         }
 
-        async function loadHistoryAndProactiveSuggestions() {
+        async function loadHistoryAndProactiveSuggestions(isIdlePulse = false) {
             try {
-                const res = await fetch('/api/history');
-                const data = await res.json();
-                data.history.forEach(item => appendMessage(item.role, item.content));
+                if (!isIdlePulse) {
+                    const res = await fetch('/api/history');
+                    const data = await res.json();
+                    data.history.forEach(item => appendMessage(item.role, item.content));
+                }
 
-                const suggestRes = await fetch('/api/proactive-suggestions');
+                const email = localStorage.getItem('user_email') || '';
+                const authCode = localStorage.getItem('user_auth_code') || '';
+
+                const suggestRes = await fetch(`/api/proactive-suggestions?email=${encodeURIComponent(email)}&auth_code=${encodeURIComponent(authCode)}&is_idle_pulse=${isIdlePulse}`);
                 const suggestData = await suggestRes.json();
                 
                 if (suggestData.greeting) {
-                    appendMessage('assistant', `👋 ${suggestData.greeting}`);
+                    appendMessage('assistant', suggestData.greeting, suggestData.inline_choices || []);
                 }
                 
                 if (suggestData.suggested_chips && suggestData.suggested_chips.length > 0) {
@@ -170,14 +210,14 @@
                 btn.className = 'chip-btn';
                 btn.innerText = chipText;
                 btn.onclick = () => {
-                    document.getElementById('userInput').value = chipText;
+                    userInput.value = chipText;
                     send();
                 };
                 chipsArea.appendChild(btn);
             });
         }
 
-        function appendMessage(role, text = '') {
+        function appendMessage(role, text = '', inlineChoices = []) {
             const wrapper = document.createElement('div');
             wrapper.className = `msg-wrapper ${role}`;
 
@@ -189,6 +229,24 @@
             msgDiv.className = 'msg';
             msgDiv.innerText = text;
 
+            if (inlineChoices && inlineChoices.length > 0) {
+                const choicesContainer = document.createElement('div');
+                choicesContainer.className = 'inline-buttons-container';
+                
+                inlineChoices.forEach(choiceText => {
+                    const btn = document.createElement('button');
+                    btn.className = 'inline-choice-btn';
+                    btn.innerText = `👉 ${choiceText}`;
+                    btn.onclick = () => {
+                        userInput.value = choiceText;
+                        send();
+                    };
+                    choicesContainer.appendChild(btn);
+                });
+                
+                msgDiv.appendChild(choicesContainer);
+            }
+
             wrapper.appendChild(nameDiv);
             wrapper.appendChild(msgDiv);
             
@@ -199,12 +257,14 @@
         }
 
         async function send() {
-            const input = document.getElementById('userInput');
-            const text = input.value.trim();
+            const text = userInput.value.trim();
             if (!text) return;
 
+            lastActivityTime = Date.now();
+            isGenerating = true;
+
             appendMessage('user', text);
-            input.value = '';
+            userInput.value = '';
 
             const assistantMsgDiv = appendMessage('assistant', '');
             const email = localStorage.getItem('user_email') || '';
@@ -237,10 +297,22 @@
             } catch (error) {
                 assistantMsgDiv.innerText = "[Network Error or Streaming Interrupted]";
                 console.error("Streaming error:", error);
+            } finally {
+                isGenerating = false;
+                lastActivityTime = Date.now();
             }
         }
 
-        function startReminderPolling() {
+        function hasRecentGreetingInLastThree() {
+            const messages = Array.from(chatBox.querySelectorAll('.msg'));
+            const lastThree = messages.slice(-3);
+            return lastThree.some(msg => {
+                const text = msg.innerText;
+                return text.includes("Welcome back") || text.includes("System Pulse Check") || text.includes("Remaining events today");
+            });
+        }
+
+        function startBackgroundWatchers() {
             setInterval(async () => {
                 try {
                     const res = await fetch('/api/reminders/pending');
@@ -262,6 +334,17 @@
                     console.error("Error polling reminder alerts:", err);
                 }
             }, 5000);
+
+            setInterval(() => {
+                const idleDuration = (Date.now() - lastActivityTime) / 1000;
+                
+                if (idleDuration >= 30 && !isGenerating && !isUserFocusedOnInput && userInput.value.trim() === '') {
+                    if (!hasRecentGreetingInLastThree()) {
+                        loadHistoryAndProactiveSuggestions(true);
+                    }
+                    lastActivityTime = Date.now();
+                }
+            }, 10000);
         }
 
         initApp();
