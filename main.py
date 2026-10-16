@@ -55,7 +55,7 @@ async def auto_reminder_checker():
                         if unique_key not in triggered_reminders:
                             triggered_reminders.add(unique_key)
                             print(f"\n==================================================")
-                            print(f"⏰ [AUTOMATIC PROACTIVE REMINDER ALERT]")
+                            print(f"[AUTOMATIC PROACTIVE REMINDER ALERT]")
                             print(f"Time: {e_date} {e_time}")
                             print(f"Type: [{str(cat).upper()}] {title}")
                             print("==================================================\n")
@@ -82,9 +82,9 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan=lifespan)
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-public_env = os.getenv("PUBLIC_URL", "http://127.0.0.1:8000")
+public_env = os.getenv("PUBLIC_URL", "https://neurosis-elated-encrust.ngrok-free.dev")
 parsed_url = urlparse(public_env)
-BASE_HOST = f"{parsed_url.scheme}://{parsed_url.netloc}" if parsed_url.netloc else "http://127.0.0.1:8000"
+BASE_HOST = f"{parsed_url.scheme}://{parsed_url.netloc}" if parsed_url.netloc else "https://neurosis-elated-encrust.ngrok-free.dev"
 
 
 class ChatRequest(BaseModel):

@@ -16,9 +16,9 @@ load_dotenv()
 
 api_key = os.getenv("LLM_API_KEY", "")
 
-public_env = os.getenv("PUBLIC_URL", "http://127.0.0.1:8000")
+public_env = os.getenv("PUBLIC_URL", "https://neurosis-elated-encrust.ngrok-free.dev")
 parsed_url = urlparse(public_env)
-BASE_HOST = f"{parsed_url.scheme}://{parsed_url.netloc}" if parsed_url.netloc else "http://127.0.0.1:8000"
+BASE_HOST = f"{parsed_url.scheme}://{parsed_url.netloc}" if parsed_url.netloc else "https://neurosis-elated-encrust.ngrok-free.dev"
 
 if not api_key:
     print("LLM_API_KEY is empty. Please check your .env file.")
@@ -61,6 +61,7 @@ class AgentCore:
 
         now = datetime.datetime.now()
         current_date_str = now.strftime("%Y-%m-%d")
+        current_time_str = now.strftime("%H:%M")
         weekday_str = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"][now.weekday()]
 
         available_skills = self.registry.list_skills()
@@ -72,7 +73,7 @@ class AgentCore:
 
         system_prompt = f"""You are an autonomous personal assistant (OpenClaw AI).
         [Current Time Baseline]:
-        - Today's Date is: {current_date_str} ({weekday_str}).
+        - Today's Date is: {current_date_str} ({weekday_str}), Current Time is: {current_time_str}.
 
         Available tools:
         {json.dumps(available_skills, ensure_ascii=False, indent=2)}
@@ -180,7 +181,7 @@ class AgentCore:
                 download_link = f"{BASE_HOST}/calendar/download"
                 
                 summary_prompt = f"""You are a professional personal AI assistant.
-                Today's date is {current_date_str} ({weekday_str}).
+                Today's date is {current_date_str} ({weekday_str}), and current time is {current_time_str}.
                 User request: "{user_prompt}"
                 Tool [{tool_name}] execution result:
                 {json.dumps(execution_res, ensure_ascii=False)}
@@ -192,23 +193,24 @@ class AgentCore:
                 OUTPUT FORMAT BY SCENARIO:
 
                 Scenario A: LISTING / QUERYING SCHEDULE (e.g., "What's on my schedule", "Show upcoming events", "Do I have meetings")
-                - Output the clean deduplicated list directly using this exact line format:
+                - FILTER OUT PAST EVENTS: Ignore any event whose date and time are strictly earlier than current baseline ({current_date_str} {current_time_str}).
+                - Output the clean upcoming list directly using this exact line format:
                 - YYYY-MM-DD | HH:MM | [CATEGORY] Title
-                - If no events found, output concise status: "Your schedule for this period is empty."
-                - DO NOT output the download link during general queries.
+                - If no upcoming events remain, output concise status: "You have no upcoming events scheduled."
+                - DO NOT output the download link during general schedule queries.
 
                 Scenario B: CALENDAR EXPORT / FILE DOWNLOAD REQUEST
-                - Output strictly:
+                - Output strictly using the EXACT ngrok download URL:
                 "Here is your calendar file: [Download calendar_export.ics]({download_link})"
 
                 Scenario C: ADDING / SAVING EVENTS
                 - Output clearly:
-                  Event saved successfully:
+                Event saved successfully:
                 - YYYY-MM-DD | HH:MM | [CATEGORY] Title
 
                 Scenario D: REMINDER CREATION
                 - Output clearly:
-                  Reminder set for YYYY-MM-DD at HH:MM: Title
+                Reminder set for YYYY-MM-DD at HH:MM: Title
 
                 EMAIL TOOL EXECUTION RULES:
                 - When user asks to email calendar export, invoke email_tool with `{{"action": "send", "to": "me", "subject": "Calendar Export", "attachment": "calendar_export.ics"}}`.
