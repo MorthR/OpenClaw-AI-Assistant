@@ -79,14 +79,13 @@ class AgentCore:
         {json.dumps(available_skills, ensure_ascii=False, indent=2)}
 
         {history_text}CRITICAL ROUTING & INTENT RULES:
-        1. EXPANDED SCHEDULE SCOPE: Detect and extract ANY schedule items (Meetings, Class/Course changes, Deadlines, Travel/Flight bookings, Entertainment/Concerts, Bills/Reminders).
-        2. EXTENDED EMAIL SEARCH SCOPE (LAST 30 DAYS): When reading/checking emails, pass `limit: 20` to `email_tool`.
-        3. FILTER OUT SYSTEM EXPORTS: Completely ignore email subjects like "My Calendar Export" or automated promotional spam when recommending schedule items.
-        4. SCHEDULE CONFLICT PREVENTION: Warn the user if an event shares the exact date and time with existing calendar events.
+        1. NO MECHANICAL MARKDOWN SYMBOLS: NEVER use Markdown headers (`#`, `##`), bold markers (`**`), or complex Markdown tables in text responses. Keep language natural, conversational, and user-friendly.
+        2. EXPANDED SCHEDULE SCOPE: Detect and extract ANY schedule items (Meetings, Class/Course changes, Deadlines, Travel/Flight bookings, Entertainment/Concerts, Bills/Reminders).
+        3. EXTENDED EMAIL SEARCH SCOPE (LAST 30 DAYS): When reading/checking emails, pass `limit: 20` to `email_tool`.
+        4. FILTER SYSTEM EXPORTS & SPAM: Completely ignore email subjects like "My Calendar Export" or general marketing newsletters when recommending schedule items.
         5. RELATIVE TIME PARSING: Convert relative times ("tomorrow 2pm", "next Wednesday") to standard YYYY-MM-DD and HH:MM based on baseline ({current_date_str}).
         6. EMAIL ROUTING: If user asks to check, read, search, or inspect emails, set "tool" to "email_tool" with `action: "search"` and `limit: 20`.
         7. CALENDAR ROUTING: If user asks to view/add/update/export schedule items, set "tool" to "calendar_tool".
-        8. SUGGESTED CHIPS: Always suggest 2-3 short, context-aware action chips.
 
         EXPECTED OUTPUT FORMAT (JSON):
         For Single Tool Execution:
@@ -175,29 +174,34 @@ class AgentCore:
                 
                 download_link = f"{BASE_HOST}/calendar/download"
                 
-                summary_prompt = f"""You are a professional personal AI assistant.
+                summary_prompt = f"""You are a warm, helpful personal AI assistant.
                 Today's date is {current_date_str} ({weekday_str}), and current time is {current_time_str}.
                 User request: "{user_prompt}"
                 Tool [{tool_name}] execution result:
                 {json.dumps(execution_res, ensure_ascii=False)}
 
-                CRITICAL RESPONSE FORMAT RULES:
-                1. ALL user-facing text outputs MUST be in STRICT, CLEAN ENGLISH ONLY.
-                2. DO NOT output repetitive status statements like "No duplicate events were found" unless explicitly adding/modifying an event.
+                STRICT TEXT FORMATTING INSTRUCTIONS:
+                1. DO NOT use markdown headers like `#` or `##`.
+                2. DO NOT use markdown bold stars like `**`.
+                3. DO NOT output complex Markdown tables.
+                4. Keep the tone warm, natural, and human-like.
 
-                EMAIL INTERACTION RULES:
-                - When user chooses "Check recent email details":
-                List concise non-spam emails in bullet points (From, Subject, Date). Avoid huge tables.
+                RESPONSE GUIDELINES BY SCENARIO:
 
-                SCHEDULE CONFLICT & ADDITION RULES:
-                - If an event was saved successfully, confirm with:
-                Event saved successfully:
-                - YYYY-MM-DD | HH:MM | [CATEGORY] Title
-                - If a conflict exists, inform the user clearly and ask if they wish to adjust date/time.
+                Scenario A: Check recent email details
+                - First, summarize the general types of emails received (e.g. "I reviewed your recent inbox messages. Most of them are bank notifications, service updates, and subscription newsletters.").
+                - Then list 4-5 relevant messages in plain bullet points using this exact simple format:
+                • Sender: Subject (Date)
+                - End with a friendly, natural follow-up question.
 
-                CALENDAR DISPLAY RULES:
-                - FILTER OUT PAST EVENTS: Ignore any event strictly earlier than baseline ({current_date_str} {current_time_str}).
-                - Output clean upcoming format: YYYY-MM-DD | HH:MM | [CATEGORY] Title
+                Scenario B: Recommend schedule from emails
+                - If no clear meetings, classes, or flights are found, state naturally: "I scanned your recent emails, but couldn't find any explicit meetings, class schedules, or deadlines."
+                - Do not create fake schedule items out of bank transactions or marketing offers.
+                - Offer to help add any custom event manually.
+
+                Scenario C: List my calendar
+                - Show clean upcoming schedule lines: YYYY-MM-DD | HH:MM | Title
+                - Omit past events earlier than baseline ({current_date_str} {current_time_str}).
                 """
 
                 logger.info("Starting streaming summarization from LLM API...")

@@ -34,7 +34,6 @@ pending_notifications = []
 
 
 def check_schedule_conflict(event_date: str, event_time: str) -> Optional[str]:
-    """Check if the proposed event date and time conflict with existing events in calendar.db."""
     if not os.path.exists("calendar.db"):
         return None
         
@@ -49,17 +48,16 @@ def check_schedule_conflict(event_date: str, event_time: str) -> Optional[str]:
             
             for title, ex_time in existing:
                 if ex_time == "All Day" or event_time == "All Day":
-                    return f"Conflicts with All-Day event: '{title}'"
+                    return f"Conflicts with All-Day event: {title}"
                 if ex_time == event_time:
-                    return f"Exact time overlap with: '{title}' at {ex_time}"
+                    return f"Exact time overlap with {title} at {ex_time}"
     except Exception as e:
-        print(f"Conflict check database error: {e}")
+        print(f"Conflict check error: {e}")
         
     return None
 
 
 async def auto_reminder_checker():
-    """Background async task: Checks calendar event reminders every 10 seconds."""
     while True:
         try:
             now = datetime.now()
@@ -79,11 +77,6 @@ async def auto_reminder_checker():
                         unique_key = f"{event_id}_{e_date}_{e_time}"
                         if unique_key not in triggered_reminders:
                             triggered_reminders.add(unique_key)
-                            print(f"\n==================================================")
-                            print(f"⏰ [AUTOMATIC PROACTIVE REMINDER ALERT]")
-                            print(f"Time: {e_date} {e_time}")
-                            print(f"Type: [{str(cat).upper()}] {title}")
-                            print("==================================================\n")
                             
                             pending_notifications.append({
                                 "id": event_id,
@@ -138,16 +131,14 @@ async def chat(req: ChatRequest):
 
 @app.get("/api/history")
 def get_history():
-    """Load local chat history."""
     return {"history": memory.get_recent_history(limit=20)}
 
 
 @app.get("/")
 async def index():
-    """Return the HTML frontend page."""
     html_path = os.path.join("static", "index.html")
     if not os.path.exists(html_path):
-        return {"error": "index.html not found under static/ directory"}
+        return {"error": "index.html not found"}
     return FileResponse(html_path)
 
 
@@ -250,31 +241,33 @@ def get_proactive_suggestions(
                             })
         except Exception as e:
             print(f"Silent auto email check error: {e}")
-
-    greeting = "System Pulse Check:" if is_idle_pulse else f"👋 Welcome back! (Today: {today_str})"
-
-    if upcoming_today_events:
-        event_summary = "; ".join([f"[{e[2].upper()}] {e[0]} at {e[1]}" for e in upcoming_today_events])
-        greeting += f"\n- Remaining events today: {event_summary}"
+            
+    if is_idle_pulse:
+        greeting = "I'm still here whenever you need me! Just let me know if you'd like to organize your upcoming week, log new events, or double-check your inbox."
     else:
-        greeting += f"\n- Remaining events today: None."
+        greeting = f"👋 Welcome back! Today is {today_str}.\n"
+        if upcoming_today_events:
+            event_summary = ", ".join([f"{e[0]} at {e[1]}" for e in upcoming_today_events])
+            greeting += f"Here is what's left on your schedule for today: {event_summary}.\n"
+        else:
+            greeting += "Your schedule looks completely clear for the rest of today!\n"
+            
+        greeting += "I can help you scan recent emails, organize upcoming meetings, or set up class deadlines."
 
     inline_choices = []
-    
+
     if important_schedules:
-        greeting += f"\n\nDetected {len(important_schedules)} Schedule Proposal(s) from Email Inbox:"
+        greeting += f"\n\nI noticed {len(important_schedules)} potential event(s) in your inbox that might need your attention:"
         for item in important_schedules[:2]:
-            conflict_str = f" ⚠️ [{item['conflict']}]" if item['conflict'] else ""
-            greeting += f"\n• {item['title']} (Proposed: {item['date']} at {item['time']}){conflict_str}"
+            conflict_str = f" (Note: {item['conflict']})" if item['conflict'] else ""
+            greeting += f"\n• {item['title']} on {item['date']} at {item['time']}{conflict_str}"
         
-        greeting += "\n\nWould you like to process and add these events into your calendar?"
+        greeting += "\n\nWould you like me to go ahead and add these to your calendar?"
         
         for s in important_schedules[:2]:
-            inline_choices.append(f"Yes, add schedule: {s['title']} on {s['date']} at {s['time']}")
+            inline_choices.append(f"Yes, add: {s['title']}")
         
         inline_choices.append("No, thanks")
-    else:
-        pass
 
     return {
         "greeting": greeting,
