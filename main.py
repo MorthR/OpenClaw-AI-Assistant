@@ -1,9 +1,12 @@
 import os
 import sqlite3
 import re
+import asyncio
 from datetime import datetime
 from typing import Optional
-import anyio
+from urllib.parse import urlparse
+from contextlib import asynccontextmanager
+from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.responses import StreamingResponse, FileResponse, Response
 from fastapi.staticfiles import StaticFiles
@@ -16,24 +19,80 @@ from skills.calendar import CalendarSkill
 from agent.core import AgentCore
 from agent.memory import MemoryManager
 
+load_dotenv()
+
 memory = MemoryManager()
 registry = SkillRegistry()
 
 registry.register(EmailSkill())
 registry.register(CalendarSkill())
 
-agent = AgentCore(registry=registry, memory=memory, model_name="deepseek-flash")
+agent = AgentCore(registry=registry, memory=memory, model_name=os.getenv("LLM_MODEL", "deepseek-flash"))
 
-app = FastAPI()
+triggered_reminders = set()
+pending_notifications = []
+
+
+async def auto_reminder_checker():
+    """Background async task: Checks calendar event reminders every 10 seconds."""
+    while True:
+        try:
+            now = datetime.now()
+            today_str = now.strftime("%Y-%m-%d")
+            time_str = now.strftime("%H:%M")
+
+            if os.path.exists("calendar.db"):
+                with sqlite3.connect("calendar.db") as conn:
+                    cursor = conn.cursor()
+                    cursor.execute(
+                        "SELECT id, title, event_date, event_time, category FROM events WHERE event_date = ? AND event_time = ?",
+                        (today_str, time_str)
+                    )
+                    due_events = cursor.fetchall()
+                    
+                    for event_id, title, e_date, e_time, cat in due_events:
+                        unique_key = f"{event_id}_{e_date}_{e_time}"
+                        if unique_key not in triggered_reminders:
+                            triggered_reminders.add(unique_key)
+                            print(f"\n==================================================")
+                            print(f"⏰ [AUTOMATIC PROACTIVE REMINDER ALERT]")
+                            print(f"Time: {e_date} {e_time}")
+                            print(f"Type: [{str(cat).upper()}] {title}")
+                            print("==================================================\n")
+                            
+                            pending_notifications.append({
+                                "id": event_id,
+                                "title": title,
+                                "time": e_time,
+                                "category": str(cat).upper()
+                            })
+        except Exception as e:
+            print(f"Error checking automatic reminders: {e}")
+
+        await asyncio.sleep(10)
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    reminder_task = asyncio.create_task(auto_reminder_checker())
+    yield
+    reminder_task.cancel()
+
+
+app = FastAPI(lifespan=lifespan)
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-PUBLIC_FEED_URL = "http://127.0.0.1:8000/calendar/feed.ics"
+public_env = os.getenv("PUBLIC_URL", "http://127.0.0.1:8000")
+parsed_url = urlparse(public_env)
+BASE_HOST = f"{parsed_url.scheme}://{parsed_url.netloc}" if parsed_url.netloc else "http://127.0.0.1:8000"
+
 
 class ChatRequest(BaseModel):
     message: str
     session_id: str = "default_user"
     email: Optional[str] = None
     auth_code: Optional[str] = None
+
 
 @app.post("/api/chat")
 async def chat(req: ChatRequest):
@@ -51,35 +110,21 @@ async def chat(req: ChatRequest):
         media_type="text/plain; charset=utf-8"
     )
 
+
 @app.get("/api/history")
 def get_history():
-    """Load local chat history"""
+    """Load local chat history."""
     return {"history": memory.get_recent_history(limit=20)}
+
 
 @app.get("/")
 async def index():
-    """Return the HTML frontend page"""
+    """Return the HTML frontend page."""
     html_path = os.path.join("static", "index.html")
     if not os.path.exists(html_path):
         return {"error": "index.html not found under static/ directory"}
     return FileResponse(html_path)
 
-@app.on_event("startup")
-def setup_public_tunnel():
-    global PUBLIC_FEED_URL
-    try:
-        from pyngrok import ngrok
-        token = os.getenv("NGROK_AUTHTOKEN")
-        if token:
-            ngrok.set_auth_token(token)
-            domain = os.getenv("NGROK_DOMAIN", "neurosis-elated-encrust.ngrok-free.dev")
-            tunnel = ngrok.connect(8000, domain=domain)
-            PUBLIC_FEED_URL = tunnel.public_url + "/calendar/feed.ics"
-            print(f"========== PUBLIC CALENDAR FEED LOADED ==========")
-            print(f"URL: {PUBLIC_FEED_URL}")
-            print(f"==================================================")
-    except Exception as e:
-        print(f"Tunnel auto-start fallback to local: {e}")
 
 @app.get("/calendar/feed.ics")
 @app.get("/calendar/download")
@@ -91,23 +136,24 @@ def get_ics_feed():
         "X-WR-CALNAME:OpenClaw AI Schedule"
     ]
 
-    with sqlite3.connect("calendar.db") as conn:
-        cursor = conn.cursor()
-        cursor.execute("SELECT title, event_date, event_time, category FROM events")
-        for title, e_date, e_time, cat in cursor.fetchall():
-            clean_title = re.sub(r'^\s*\[[A-Za-z0-9_-]+\]\s*', '', title).strip()
-            ics_content.append("BEGIN:VEVENT")
-            ics_content.append(f"SUMMARY:[{cat.upper()}] {clean_title}")
-            
-            if e_time in ["All Day"]:
-                ics_content.append(f"DTSTART;VALUE=DATE:{e_date.replace('-', '')}")
-            else:
-                try:
-                    dt = datetime.strptime(f"{e_date} {e_time}", "%Y-%m-%d %H:%M")
-                    ics_content.append(f"DTSTART:{dt.strftime('%Y%m%dT%H%M%S')}")
-                except Exception:
+    if os.path.exists("calendar.db"):
+        with sqlite3.connect("calendar.db") as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT title, event_date, event_time, category FROM events")
+            for title, e_date, e_time, cat in cursor.fetchall():
+                clean_title = re.sub(r'^\s*\[[A-Za-z0-9_-]+\]\s*', '', title).strip()
+                ics_content.append("BEGIN:VEVENT")
+                ics_content.append(f"SUMMARY:[{str(cat).upper()}] {clean_title}")
+                
+                if str(e_time).lower() in ["all day", "none", ""]:
                     ics_content.append(f"DTSTART;VALUE=DATE:{e_date.replace('-', '')}")
-            ics_content.append("END:VEVENT")
+                else:
+                    try:
+                        dt = datetime.strptime(f"{e_date} {e_time}", "%Y-%m-%d %H:%M")
+                        ics_content.append(f"DTSTART:{dt.strftime('%Y%m%dT%H%M%S')}")
+                    except Exception:
+                        ics_content.append(f"DTSTART;VALUE=DATE:{e_date.replace('-', '')}")
+                ics_content.append("END:VEVENT")
 
     ics_content.append("END:VCALENDAR")
     return Response(
@@ -116,36 +162,54 @@ def get_ics_feed():
         headers={"Content-Disposition": "attachment; filename=calendar_export.ics"}
     )
 
+
 @app.get("/api/proactive-suggestions")
 def get_proactive_suggestions(session_id: str = "default_user"):
-    import sqlite3
-    from datetime import date
+    """Endpoint called when interface opens: Filter out past events for today."""
+    now = datetime.now()
+    today_str = now.strftime("%Y-%m-%d")
+    current_time_str = now.strftime("%H:%M")
+    
+    upcoming_today_events = []
 
-    today_str = date.today().isoformat()
+    if os.path.exists("calendar.db"):
+        with sqlite3.connect("calendar.db") as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                "SELECT title, event_time, category FROM events WHERE event_date = ? ORDER BY event_time ASC",
+                (today_str,)
+            )
+            all_today_events = cursor.fetchall()
 
-    with sqlite3.connect("calendar.db") as conn:
-        cursor = conn.cursor()
-        cursor.execute(
-            "SELECT title, event_time, category FROM events WHERE event_date = ? ORDER BY event_time ASC",
-            (today_str,)
-        )
-        today_events = cursor.fetchall()
+            for title, e_time, cat in all_today_events:
+                if e_time == "All Day" or e_time >= current_time_str:
+                    upcoming_today_events.append((title, e_time, cat))
 
-    if today_events:
-        event_summary = ", ".join([f"{e[0]} at {e[1]}" for e in today_events])
-        greeting = f"Good morning! Here is your schedule for today ({today_str}): {event_summary}."
+    if upcoming_today_events:
+        event_summary = "; ".join([f"[{e[2].upper()}] {e[0]} at {e[1]}" for e in upcoming_today_events])
+        greeting = f"Welcome back! Here is your remaining schedule summary for today ({today_str}): {event_summary}."
     else:
-        greeting = f"Hello! You have no events scheduled for today ({today_str})."
+        greeting = f"Welcome back! You have no upcoming events remaining for today ({today_str}). Would you like to log any future meetings, classes, or activities?"
 
     return {
         "greeting": greeting,
         "suggested_chips": [
-            "Record a new meeting",
-            "Add a class schedule",
-            "Log an entertainment activity",
-            "Export my full calendar"
+            "Log a new meeting or call",
+            "Add class/course schedule",
+            "Record entertainment activity",
+            "Export full calendar file"
         ]
     }
+
+
+@app.get("/api/reminders/pending")
+def get_pending_reminders():
+    """API endpoint for frontend to poll and consume new reminder popups."""
+    global pending_notifications
+    alerts = list(pending_notifications)
+    pending_notifications.clear()
+    return {"alerts": alerts}
+
 
 if __name__ == "__main__":
     import uvicorn
