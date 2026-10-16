@@ -14,10 +14,13 @@ from config.logger import logger
 load_dotenv()
 
 api_key = os.getenv("LLM_API_KEY", "")
+PUBLIC_URL = os.getenv("PUBLIC_URL", "http://127.0.0.1:8000").rstrip("/")
+
 if not api_key:
     print("LLM_API_KEY is empty. Please check your .env file.")
 else:
     print(f"LLM_API_KEY loaded successfully (Length: {len(api_key)}).")
+
 
 class AgentCore:
     def __init__(
@@ -43,7 +46,12 @@ class AgentCore:
             "Content-Type": "application/json"
         }
 
-    async def process_stream(self, user_prompt: str, session_id: str = "default_user", user_credentials: dict = None) -> AsyncGenerator[str, None]:
+    async def process_stream(
+        self, 
+        user_prompt: str, 
+        session_id: str = "default_user", 
+        user_credentials: dict = None
+    ) -> AsyncGenerator[str, None]:
         start_time = time.time()
         logger.info(f"Received user prompt: '{user_prompt}' [Session: {session_id}]")
 
@@ -59,36 +67,36 @@ class AgentCore:
             history_text = "[Chat History]:\n" + "\n".join([f"{item['role']}: {item['content']}" for item in history_records]) + "\n\n"
 
         system_prompt = f"""You are an autonomous personal assistant (OpenClaw AI).
-    [Current Time Baseline]:
-    - Today's Date is: {current_date_str} ({weekday_str}).
+[Current Time Baseline]:
+- Today's Date is: {current_date_str} ({weekday_str}).
 
-    Available tools:
-    {json.dumps(available_skills, ensure_ascii=False, indent=2)}
+Available tools:
+{json.dumps(available_skills, ensure_ascii=False, indent=2)}
 
-    {history_text}CRITICAL ROUTING & INTENT RULES:
-    1. EXPANDED SCHEDULE SCOPE: Detect and extract ANY schedule items (Meetings, Class/Course changes, Deadlines, Travel/Flight bookings, Entertainment/Concerts, Bills/Reminders).
-    2. RELATIVE TIME PARSING: Convert relative times ("tomorrow 2pm", "next Wednesday") to standard YYYY-MM-DD and HH:MM based on today's baseline ({current_date_str}).
-    3. EMAIL ROUTING: If user asks to check, read, search, or send emails, set "tool" to "email_tool".
-    4. CALENDAR ROUTING: If user asks to view/add/update schedule items, set "tool" to "calendar_tool".
-    5. SUGGESTED CHIPS: Always suggest 2-3 short, context-aware action chips for proactive interaction in "suggested_chips".
+{history_text}CRITICAL ROUTING & INTENT RULES:
+1. EXPANDED SCHEDULE SCOPE: Detect and extract ANY schedule items (Meetings, Class/Course changes, Deadlines, Travel/Flight bookings, Entertainment/Concerts, Bills/Reminders).
+2. RELATIVE TIME PARSING: Convert relative times ("tomorrow 2pm", "next Wednesday") to standard YYYY-MM-DD and HH:MM based on today's baseline ({current_date_str}).
+3. EMAIL ROUTING: If user asks to check, read, search, or send emails, set "tool" to "email_tool".
+4. CALENDAR ROUTING: If user asks to view/add/update schedule items, set "tool" to "calendar_tool".
+5. SUGGESTED CHIPS: Always suggest 2-3 short, context-aware action chips for proactive interaction in "suggested_chips".
 
-    EXPECTED OUTPUT FORMAT (JSON):
-    For Tool Execution:
-    {{
-        "tool": "calendar_tool",
-        "parameters": {{"action": "add", "title": "AI Course Midterm", "date": "2026-10-20", "time": "14:00", "category": "course"}},
-        "suggested_chips": ["Check Weekly Schedule", "Check for New Notification Emails"],
-        "response": null
-    }}
+EXPECTED OUTPUT FORMAT (JSON):
+For Tool Execution:
+{{
+    "tool": "calendar_tool",
+    "parameters": {{"action": "add", "title": "AI Course Midterm", "date": "2026-10-20", "time": "14:00", "category": "course"}},
+    "suggested_chips": ["Check Weekly Schedule", "Check for New Notification Emails"],
+    "response": null
+}}
 
-    For Direct Chat:
-    {{
-        "tool": null,
-        "parameters": null,
-        "suggested_chips": ["Check Latest Emails", "Organize Today's Tasks", "View This Week's Class Changes"],
-        "response": "Hello! How can I help manage your schedule or check your emails today?"
-    }}
-    """
+For Direct Chat:
+{{
+    "tool": null,
+    "parameters": null,
+    "suggested_chips": ["Check Latest Emails", "Organize Today's Tasks", "View This Week's Class Changes"],
+    "response": "Hello! How can I help manage your schedule or check your emails today?"
+}}
+"""
 
         full_assistant_reply = ""
 
@@ -150,28 +158,49 @@ class AgentCore:
 
                 logger.info(f"Skill [{tool_name}] execution completed in {time.time() - tool_start:.2f}s. Result: {execution_res}")
                 
+                # 构建绝对下载 URL
+                download_link = f"{PUBLIC_URL}/calendar/download"
+                
                 summary_prompt = f"""You are a professional personal AI assistant.
-                Today's date is {current_date_str} ({weekday_str}).
-                User request: "{user_prompt}"
-                Tool [{tool_name}] execution result:
-                {json.dumps(execution_res, ensure_ascii=False)}
+Today's date is {current_date_str} ({weekday_str}).
+User request: "{user_prompt}"
+Tool [{tool_name}] execution result:
+{json.dumps(execution_res, ensure_ascii=False)}
 
-                Instructions:
-                1. Summarize the tool result clearly and concisely for the user.
-                2. Explicitly highlight if any event was added or skipped due to duplicate detection.
-                3. Use clear, plain text in English.
+Instructions:
+1. Summarize the tool result clearly and concisely for the user.
+2. Explicitly highlight if any event was added or skipped due to duplicate detection.
+3. ALL user-facing text outputs MUST be in STRICT ENGLISH ONLY.
 
-                STRICT CALENDAR FORMAT RULES:
-                1. ALL user facing outputs for calendar events MUST be in ENGLISH only.
-                2. When the user asks to list current or all schedules, display ALL retrieved events from the tool response.
-                3. EVERY event in the output list MUST strictly follow this exact Markdown format:
-                - YYYY-MM-DD | [TIME] | [CATEGORY] Title
+EMAIL TOOL EXECUTION RULES:
+1. When the user asks to send an email to themselves (e.g. "Send to my email"), ALWAYS invoke `email_tool` immediately with `{{"action": "send", "to": "me", "subject": "Calendar Export", "attachment": "calendar_export.ics"}}`.
+2. Do NOT ask the user for their email address. The backend automatically resolves "me" to their authenticated email address.
 
-                Example Output:
-                - 2026-10-20 | 17:00 | [COURSE] Coding Course Assignment DDL
-                - 2026-10-21 | 14:00 | [COURSE] AI Course Assignment DDL
-                - 2026-10-21 | All Day | [HOLIDAY_BIRTHDAY] Brother's Birthday
-                """
+CALENDAR EXPORT RULES:
+1. When the user asks to export the calendar file directly or when 'download_url' is in tool result, output the downloadable link using the EXACT ABSOLUTE URL:
+   "Here is your calendar file: [Download calendar_export.ics]({download_link})"
+   CRITICAL: Never output a relative path like "calendar/download". Always include full scheme and host ({download_link}).
+
+STRICT CALENDAR DISPLAY FORMAT RULES:
+1. DEDUPLICATE: Filter out duplicate events (same title, date, and time) before presenting the list to the user.
+2. Display all unique events using this exact format:
+   - YYYY-MM-DD | [TIME] | [CATEGORY] Title
+
+Example Output:
+- 2026-10-20 | 17:00 | [COURSE] Coding Course Assignment DDL
+- 2026-10-21 | 14:00 | [COURSE] AI Course Assignment DDL
+- 2026-10-21 | All Day | [HOLIDAY_BIRTHDAY] Brother's Birthday
+
+SCHEDULE EXTRACTION SCOPE:
+When reading user communications or messages, proactively identify and categorize any timed activity into:
+- Meetings & Calls (e.g., team sync, client call)
+- Classes & Academic (e.g., lectures, lab sessions, assignment deadlines)
+- Entertainment & Leisure (e.g., movie night, gym sessions, concerts, dinners)
+- Travel & Logistics (e.g., flight times, train tickets, hotel bookings)
+- Personal Milestones (e.g., birthdays, anniversaries, doctor appointments)
+
+When relevant activities are detected, proactively suggest saving them to the user's schedule.
+"""
 
                 logger.info("Starting streaming summarization from LLM API...")
                 async with client.stream(

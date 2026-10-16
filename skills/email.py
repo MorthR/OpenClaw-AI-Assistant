@@ -1,10 +1,15 @@
 from ast import Dict
+import os
+import re
+import sqlite3
 import imaplib
 import smtplib
 import email
+from datetime import datetime
 from email.header import decode_header
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from email.mime.application import MIMEApplication
 from typing import Any
 from .base import BaseSkill
 
@@ -18,7 +23,7 @@ class EmailSkill(BaseSkill):
 
     @property
     def description(self) -> str:
-        return "Tool for reading, searching, or sending emails"
+        return "Tool for reading, searching, or sending emails (supports calendar attachments)"
 
     @property
     def schema(self) -> dict:
@@ -35,23 +40,31 @@ class EmailSkill(BaseSkill):
                     },
                     "keyword": {
                         "type": "string",
-                        "description": "Query email search keyword, e.g., 'express delivery', 'receipt', sender name, etc. Set to null if no keyword specified."
+                        "description": "Query email search keyword."
                     },
                     "limit": {
                         "type": "integer",
-                        "description": "The max number of emails to retrieve (e.g. 6 if requested 6 emails). Default is 5."
+                        "description": "Max number of emails to retrieve. Default is 5."
+                    },
+                    "to": {
+                        "type": "string",
+                        "description": "Recipient email address. If sending to self, use the authenticated user's email address."
                     },
                     "to_email": {
                         "type": "string",
-                        "description": "Recipient email address when sending email"
+                        "description": "Recipient email address alias."
                     },
                     "subject": {
                         "type": "string",
-                        "description": "Send email subject"
+                        "description": "Email subject"
                     },
                     "body": {
                         "type": "string",
-                        "description": "Send email body content"
+                        "description": "Email content body"
+                    },
+                    "attachment": {
+                        "type": "string",
+                        "description": "Attachment filename, e.g., 'calendar_export.ics'"
                     }
                 },
                 "required": ["action"]
@@ -69,20 +82,35 @@ class EmailSkill(BaseSkill):
         else:
             return (f"imap.{domain}", 993), (f"smtp.{domain}", 465)
 
-    def extract_schedule_events(self, limit: int = 5) -> Dict[str, Any]:
-        keywords = ["meeting", "schedule", "invitation", "date", "discusstion", "appointment", "conference", "call", "webinar"]
-        found_emails = []
-        for kw in keywords:
-            results = self.search_emails(query=kw, limit=limit)
-        for email in results:
-            if email not in found_emails:
-                found_emails.append(email)
+    def _generate_ics_bytes(self) -> bytes:
+        ics_content = [
+            "BEGIN:VCALENDAR",
+            "VERSION:2.0",
+            "PRODID:-//OpenClaw AI Personal Agent//EN",
+            "X-WR-CALNAME:OpenClaw AI Schedule Export"
+        ]
 
-        return {
-            "status": "success",
-            "candidate_count": len(found_emails),
-            "emails": found_emails[:limit]
-        }
+        if os.path.exists("calendar.db"):
+            with sqlite3.connect("calendar.db") as conn:
+                cursor = conn.cursor()
+                cursor.execute("SELECT title, event_date, event_time, category FROM events")
+                for title, e_date, e_time, cat in cursor.fetchall():
+                    clean_title = re.sub(r'^\s*\[[A-Za-z0-9_-]+\]\s*', '', title).strip()
+                    ics_content.append("BEGIN:VEVENT")
+                    ics_content.append(f"SUMMARY:[{cat.upper()}] {clean_title}")
+                    
+                    if e_time in ["All Day"]:
+                        ics_content.append(f"DTSTART;VALUE=DATE:{e_date.replace('-', '')}")
+                    else:
+                        try:
+                            dt = datetime.strptime(f"{e_date} {e_time}", "%Y-%m-%d %H:%M")
+                            ics_content.append(f"DTSTART:{dt.strftime('%Y%m%dT%H%M%S')}")
+                        except Exception:
+                            ics_content.append(f"DTSTART;VALUE=DATE:{e_date.replace('-', '')}")
+                    ics_content.append("END:VEVENT")
+
+        ics_content.append("END:VCALENDAR")
+        return "\r\n".join(ics_content).encode("utf-8")
 
     def run(self, params: dict, user_credentials: dict = None):
         user_email = user_credentials.get("email") if user_credentials else None
@@ -102,17 +130,33 @@ class EmailSkill(BaseSkill):
             limit = int(params.get("limit", 5)) if params.get("limit") else 5
             emails = self._search_emails(user_email, auth_code, imap_config[0], imap_config[1], keyword=keyword, limit=limit)
             return {"status": "success", "count": len(emails), "emails": emails}
-        elif action == "send":
-            to_email = params.get("to_email") or params.get("to") or params.get("recipient")
-            subject = params.get("subject") or "No Subject"
-            body = params.get("body") or params.get("content") or params.get("text") or ""
-            if not to_email:
-                return {
-                    "status": "error",
-                    "message": "Failed to send: Recipient email address (to_email) is missing in parameters."
-                }
 
-            res = self._send_email(user_email, auth_code, smtp_config[0], smtp_config[1], str(to_email), str(subject), str(body))
+        elif action == "send":
+            raw_to = params.get("to") or params.get("to_email") or params.get("recipient") or ""
+            target_to = str(raw_to).strip().lower()
+
+            if not target_to or "@" not in target_to or target_to in ["me", "self", "myself", "none"]:
+                final_recipient = user_email
+            else:
+                final_recipient = str(raw_to).strip()
+
+            subject = params.get("subject") or "Calendar Export"
+            body = params.get("body") or params.get("content") or "Please check the attached calendar file."
+            attachment_name = params.get("attachment")
+            
+            if not attachment_name and ("calendar" in body.lower()):
+                attachment_name = "calendar_export.ics"
+
+            res = self._send_email(
+                username=user_email,
+                auth_code=auth_code,
+                smtp_server=smtp_config[0],
+                port=smtp_config[1],
+                to_email=final_recipient,
+                subject=str(subject),
+                body=str(body),
+                attachment_name=attachment_name
+            )
             return res
         else:
             return {"status": "error", "message": f"Unknown action type: {action}"}
@@ -125,7 +169,6 @@ class EmailSkill(BaseSkill):
             mail.select("INBOX")
 
             status, messages = mail.search(None, 'ALL')
-            
             if status != "OK" or not messages[0]:
                 return []
 
@@ -176,22 +219,24 @@ class EmailSkill(BaseSkill):
         except Exception as e:
             return [{"error": f"IMAP Search failed: {str(e)}"}]
 
-    def _send_email(self, username: str, auth_code: str, smtp_server: str, port: int, to_email: str, subject: str, body: str) -> dict:
+    def _send_email(self, username: str, auth_code: str, smtp_server: str, port: int, to_email: str, subject: str, body: str, attachment_name: str = None) -> dict:
         try:
-            to_email = str(to_email or "").strip()
-            subject = str(subject or "No Subject").strip()
-            body = str(body or "").strip()
-
             msg = MIMEMultipart()
             msg['From'] = username
             msg['To'] = to_email
             msg['Subject'] = subject
             msg.attach(MIMEText(body, 'plain', 'utf-8'))
 
+            if attachment_name and ("ics" in attachment_name.lower() or "calendar" in attachment_name.lower()):
+                ics_data = self._generate_ics_bytes()
+                part = MIMEApplication(ics_data, Name="calendar_export.ics")
+                part['Content-Disposition'] = 'attachment; filename="calendar_export.ics"'
+                msg.attach(part)
+
             server = smtplib.SMTP_SSL(smtp_server, port)
             server.login(username, auth_code)
             server.sendmail(username, [to_email], msg.as_string())
             server.quit()
-            return {"status": "success", "message": f"Successfully sent email to {to_email}"}
+            return {"status": "success", "message": f"Successfully sent email with schedule export to {to_email}"}
         except Exception as e:
             return {"status": "error", "message": f"Failed to send email: {str(e)}"}

@@ -190,34 +190,22 @@ class CalendarSkill(BaseSkill):
                     )
                 rows = cursor.fetchall()
 
-                merged_events: List[dict] = []
+                merged_events = []
                 for title, e_date, e_time, cat, is_all_day in rows:
                     clean_title = self._clean_and_translate_title(title)
-                    
-                    existing = None
-                    for m in merged_events:
-                        if m["date"] == e_date and (m["time"] == e_time or is_all_day or m["is_all_day"]):
-                            if self._is_similar(m["title"], clean_title):
-                                existing = m
-                                break
-                    
-                    if existing:
-                        if is_all_day and not existing["is_all_day"]:
-                            existing["time"] = "All Day"
-                            existing["is_all_day"] = True
-                    else:
-                        merged_events.append({
-                            "title": clean_title,
-                            "date": e_date,
-                            "time": "All Day" if is_all_day else e_time,
-                            "category": cat.lower(),
-                            "is_all_day": bool(is_all_day)
-                        })
+                    merged_events.append({
+                        "title": clean_title,
+                        "date": e_date,
+                        "time": "All Day" if is_all_day else e_time,
+                        "category": cat.lower(),
+                        "is_all_day": bool(is_all_day)
+                    })
 
                 return {
                     "status": "success",
                     "query_date": target_date,
                     "count": len(merged_events),
+                    "download_url": "http://127.0.0.1:8000/calendar/download",
                     "events": merged_events
                 }
         except Exception as e:
