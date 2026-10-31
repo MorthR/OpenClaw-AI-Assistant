@@ -128,19 +128,10 @@ To allow the AI Agent to safely access and manage your mailbox (search emails, s
 
 OpenClaw supports local iCalendar (`.ics`) file exports and optional public feeds for multi-device sync.
 
-### Option 1: Direct File Download (Local Usage)
+### Local Direct File Download
 Ask the AI Agent in the chat interface:
 > *"Export my calendar to a file"*
 
 The agent will output a direct download link: `http://127.0.0.1:8000/calendar/download`. Click the link to download the `.ics` file and double-click to import it into Windows Calendar, macOS Calendar, or Outlook.
-
-### Option 2: Live Network Calendar Subscription (External / Mobile Sync)
-To enable public calendar feed url (`/calendar/feed.ics`):
-
-1. Get a free AuthToken from [ngrok Dashboard](https://dashboard.ngrok.com/get-started/your-authtoken).
-2. Configure your environment variables in `.env`:
-   ```ini
-   NGROK_AUTHTOKEN=your_authtoken_here
-   NGROK_DOMAIN=your_static_domain_here
 
 After setting up, you can copy the generated public URL printed in the console and paste it into Apple Calendar, Outlook, or Mobile Calendar under Add Calendar Subscription to add your schedule.
