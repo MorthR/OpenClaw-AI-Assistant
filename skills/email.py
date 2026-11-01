@@ -77,11 +77,11 @@ class EmailSkill(BaseSkill):
 
         if "qq.com" in domain:
             return ("imap.qq.com", 993), ("smtp.qq.com", 465, False)
-        elif "163.com" in domain:
+        elif "163.com" in domain or "126.com" in domain:
             return ("imap.163.com", 993), ("smtp.163.com", 465, False)
         elif "gmail.com" in domain:
             return ("imap.gmail.com", 993), ("smtp.gmail.com", 465, False)
-        elif any(k in domain for k in ["outlook.com", "hotmail.com", "live.com", "office365.com"]):
+        elif any(k in domain for k in ["outlook.com", "hotmail.com", "live.com", "office365.com", "outlook.cn", "live.cn"]):
             return ("outlook.office365.com", 993), ("smtp.office365.com", 587, True)
         elif "icloud.com" in domain:
             return ("imap.mail.me.com", 993), ("smtp.mail.me.com", 587, True)
@@ -180,9 +180,15 @@ class EmailSkill(BaseSkill):
         try:
             mail = imaplib.IMAP4_SSL(imap_server, port)
             mail.login(username, auth_code)
-            mail.select("INBOX")
+
+            resp_code, resp_data = mail.select("INBOX")
+            print(f"Select response code: {resp_code}, data: {resp_data}")
+            
+            if resp_code != "OK":
+                return {"status": "error", "message": f"Could not select INBOX: {resp_data}"}
 
             status, messages = mail.search(None, 'ALL')
+            
             if status != "OK" or not messages[0]:
                 return {"status": "success", "count": 0, "emails": []}
 

@@ -4,7 +4,6 @@ import re
 import asyncio
 from datetime import datetime, timedelta
 from typing import Optional
-from urllib.parse import urlparse
 from contextlib import asynccontextmanager
 from dotenv import load_dotenv
 from fastapi import FastAPI
@@ -31,6 +30,7 @@ agent = AgentCore(registry=registry, memory=memory, model_name=os.getenv("LLM_MO
 
 triggered_reminders = set()
 pending_notifications = []
+sent_idle_sessions = set()
 
 
 def check_schedule_conflict(event_date: str, event_time: str) -> Optional[str]:
@@ -100,11 +100,6 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan=lifespan)
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-public_env = os.getenv("PUBLIC_URL", "https://neurosis-elated-encrust.ngrok-free.dev")
-parsed_url = urlparse(public_env)
-BASE_HOST = f"{parsed_url.scheme}://{parsed_url.netloc}" if parsed_url.netloc else "https://neurosis-elated-encrust.ngrok-free.dev"
-
-
 class ChatRequest(BaseModel):
     message: str
     session_id: str = "default_user"
@@ -114,6 +109,8 @@ class ChatRequest(BaseModel):
 
 @app.post("/api/chat")
 async def chat(req: ChatRequest):
+    sent_idle_sessions.discard(req.session_id)
+
     credentials = {
         "email": req.email,
         "auth_code": req.auth_code
@@ -243,9 +240,17 @@ def get_proactive_suggestions(
             print(f"Silent auto email check error: {e}")
             
     if is_idle_pulse:
+        if session_id in sent_idle_sessions:
+            return {
+                "greeting": "",
+                "inline_choices": [],
+                "suggested_chips": []
+            }
+        
+        sent_idle_sessions.add(session_id)
         greeting = "I'm still here whenever you need me! Just let me know if you'd like to organize your upcoming week, log new events, or double-check your inbox."
     else:
-        greeting = f"👋 Welcome back! Today is {today_str}.\n"
+        greeting = f"Welcome back!👋 Today is {today_str}.\n"
         if upcoming_today_events:
             event_summary = ", ".join([f"{e[0]} at {e[1]}" for e in upcoming_today_events])
             greeting += f"Here is what's left on your schedule for today: {event_summary}.\n"
@@ -260,7 +265,7 @@ def get_proactive_suggestions(
         greeting += f"\n\nI noticed {len(important_schedules)} potential event(s) in your inbox that might need your attention:"
         for item in important_schedules[:2]:
             conflict_str = f" (Note: {item['conflict']})" if item['conflict'] else ""
-            greeting += f"\n• {item['title']} on {item['date']} at {item['time']}{conflict_str}"
+            greeting += f"\n\n{item['title']} on {item['date']} at {item['time']}{conflict_str}"
         
         greeting += "\n\nWould you like me to go ahead and add these to your calendar?"
         

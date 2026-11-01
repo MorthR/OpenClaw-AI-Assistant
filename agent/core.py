@@ -16,10 +16,6 @@ load_dotenv()
 
 api_key = os.getenv("LLM_API_KEY", "")
 
-public_env = os.getenv("PUBLIC_URL", "https://neurosis-elated-encrust.ngrok-free.dev")
-parsed_url = urlparse(public_env)
-BASE_HOST = f"{parsed_url.scheme}://{parsed_url.netloc}" if parsed_url.netloc else "https://neurosis-elated-encrust.ngrok-free.dev"
-
 if not api_key:
     print("LLM_API_KEY is empty. Please check your .env file.")
 else:
@@ -172,7 +168,7 @@ class AgentCore:
 
                 logger.info(f"Skill [{tool_name}] execution completed in {time.time() - tool_start:.2f}s. Result: {execution_res}")
                 
-                download_link = f"{BASE_HOST}/calendar/download"
+                download_link = f"http://127.0.0.1:8000/calendar/download"
                 
                 summary_prompt = f"""You are a warm, helpful personal AI assistant.
                 Today's date is {current_date_str} ({weekday_str}), and current time is {current_time_str}.
